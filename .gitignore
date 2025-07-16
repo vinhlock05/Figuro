@@ -1,0 +1,68 @@
+# ======================
+# Node.js / Vite / React
+# ======================
+
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.vitepress/
+coverage/
+*.local
+
+# npm / yarn / pnpm logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# ===================
+# Python / FastAPI
+# ===================
+
+voice-agent/__pycache__/
+voice-agent/.mypy_cache/
+voice-agent/.pytest_cache/
+voice-agent/.venv/
+voice-agent/venv/
+voice-agent/.env
+
+# ===================
+# Shared / Backend
+# ===================
+
+.env
+.env.local
+.env.*.local
+*.env
+
+# VSCode / IDE / OS
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Misc
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Optional frontend outputs
+frontend/build/
+frontend/.next/
+frontend/.output/
+
+.qodo/
+.venv/
