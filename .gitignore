@@ -1,50 +1,34 @@
-# ======================
-# Node.js / Vite / React
-# ======================
-
+# Node.js
 node_modules/
-dist/
-dist-ssr/
-.vite/
-.vitepress/
-coverage/
-*.local
-
-# npm / yarn / pnpm logs
-logs/
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+dist/
 
-# ===================
-# Python / FastAPI
-# ===================
-
-voice-agent/__pycache__/
-voice-agent/.mypy_cache/
-voice-agent/.pytest_cache/
-voice-agent/.venv/
-voice-agent/venv/
-voice-agent/.env
-
-# ===================
-# Shared / Backend
-# ===================
-
+# Environment variables
 .env
+.env.*
 .env.local
-.env.*.local
-*.env
+.env.development.local
+.env.test.local
+.env.production.local
 
-# VSCode / IDE / OS
+# Logs
+logs/
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+
+# VSCode/IDE
 .vscode/
-!.vscode/extensions.json
 .idea/
 .DS_Store
 *.suo
@@ -53,16 +37,30 @@ voice-agent/.env
 *.sln
 *.sw?
 
-# Misc
-*.log
-*.pid
-*.seed
-*.pid.lock
+# Prisma
+prisma/migrations/
 
-# Optional frontend outputs
+# Redis (if using local dump)
+dump.rdb
+
+# Resend/SendGrid local dev
+resend.log
+sendgrid.log
+
+# Misc
+*.tgz
+*.bak
+*.tmp
+
+# Frontend build
 frontend/build/
 frontend/.next/
 frontend/.output/
 
-.qodo/
-.venv/
+# Python (voice agent)
+voice-agent/__pycache__/
+voice-agent/.mypy_cache/
+voice-agent/.pytest_cache/
+voice-agent/.venv/
+voice-agent/venv/
+voice-agent/.env
