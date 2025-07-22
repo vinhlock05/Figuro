@@ -14,6 +14,15 @@ interface ProductFormProps {
     editingProduct: Product | null;
 }
 
+const formatPrice = (price: number) => {
+    if (typeof price !== 'number') price = Number(price) || 0;
+    try {
+        return `${price.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} VNĐ`;
+    } catch {
+        return `${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} VNĐ`;
+    }
+};
+
 const ProductForm: React.FC<ProductFormProps> = ({
     formData,
     setFormData,
@@ -58,7 +67,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Price</label>
+                    <label className="block text-sm font-medium text-gray-700">Price (VNĐ)</label>
                     <input
                         type="number"
                         step="0.01"
@@ -67,6 +76,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         required
                     />
+                    <div className="text-xs text-gray-500 mt-1">{formatPrice(formData.price)}</div>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Stock</label>
@@ -87,7 +97,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     required
                 >
-                    <option value="">Select a category</option>
+                    <option value="" disabled>Select a category</option>
                     {categories.map(cat => (
                         <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
                     ))}
@@ -116,7 +126,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                                 onChange={() => handleCustomizationChange(opt.id)}
                                                 className="mr-1"
                                             />
-                                            {opt.optionValue} {opt.priceDelta ? `(+${opt.priceDelta})` : ''}
+                                            {opt.optionValue} {opt.priceDelta ? `(+${formatPrice(opt.priceDelta)})` : ''}
                                         </label>
                                     ))}
                                 </div>

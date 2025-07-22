@@ -16,6 +16,8 @@ const CustomizationManagement: React.FC = () => {
         addCustomization,
         editCustomization,
         removeCustomization,
+        products,
+        fetchProducts, // <-- get fetchProducts from useAdmin
     } = useAdmin();
 
     const location = useLocation();
@@ -82,11 +84,21 @@ const CustomizationManagement: React.FC = () => {
         }
     };
 
+    // Fetch products when opening modal if not loaded
+    const handleOpenModal = async () => {
+        if (!products || products.length === 0) {
+            await fetchProducts();
+        }
+        setIsModalOpen(true);
+        setEditingCustomization(null);
+        setFormData({ productId: '', optionType: '', optionValue: '', priceDelta: 0 });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">Customizations</h1>
-                <button onClick={() => { setIsModalOpen(true); setEditingCustomization(null); setFormData({ productId: '', optionType: '', optionValue: '', priceDelta: 0 }); }}
+                <button onClick={handleOpenModal}
                     className="px-4 py-2 bg-indigo-600 text-white rounded">Add Customization</button>
             </div>
             {isLoadingCustomizations ? <div>Loading...</div> : (
@@ -105,6 +117,7 @@ const CustomizationManagement: React.FC = () => {
                             onSubmit={handleSubmit}
                             onCancel={() => { setIsModalOpen(false); setEditingCustomization(null); setFormData({ productId: '', optionType: '', optionValue: '', priceDelta: 0 }); }}
                             editingCustomization={editingCustomization}
+                            products={products} // <-- pass products here
                         />
                     </div>
                 </div>

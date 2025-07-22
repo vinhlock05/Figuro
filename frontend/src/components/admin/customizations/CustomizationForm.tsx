@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CustomizationOption } from '../../../services/adminService';
+import type { CustomizationOption, Product } from '../../../services/adminService';
 
 interface CustomizationFormProps {
     formData: { productId: string; optionType: string; optionValue: string; priceDelta: number };
@@ -7,19 +7,33 @@ interface CustomizationFormProps {
     onSubmit: (e: React.FormEvent) => void;
     onCancel: () => void;
     editingCustomization: CustomizationOption | null;
+    products: Product[];
 }
 
-const CustomizationForm: React.FC<CustomizationFormProps> = ({ formData, setFormData, onSubmit, onCancel, editingCustomization }) => (
+const formatPrice = (price: number) => {
+    if (typeof price !== 'number') price = Number(price) || 0;
+    try {
+        return `${price.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} VNĐ`;
+    } catch {
+        return `${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} VNĐ`;
+    }
+};
+
+const CustomizationForm: React.FC<CustomizationFormProps> = ({ formData, setFormData, onSubmit, onCancel, editingCustomization, products }) => (
     <form onSubmit={onSubmit} className="space-y-4">
         <div>
-            <label className="block text-sm font-medium">Product ID</label>
-            <input
-                type="text"
+            <label className="block text-sm font-medium">Product</label>
+            <select
                 value={formData.productId}
                 onChange={e => setFormData({ ...formData, productId: e.target.value })}
                 className="w-full border rounded px-3 py-2"
                 required
-            />
+            >
+                <option value="" disabled>Select a product</option>
+                {products.map(product => (
+                    <option key={product.id} value={product.id}>{product.name}</option>
+                ))}
+            </select>
         </div>
         <div>
             <label className="block text-sm font-medium">Type</label>
@@ -42,7 +56,7 @@ const CustomizationForm: React.FC<CustomizationFormProps> = ({ formData, setForm
             />
         </div>
         <div>
-            <label className="block text-sm font-medium">Price Delta</label>
+            <label className="block text-sm font-medium">Price Delta (VNĐ)</label>
             <input
                 type="number"
                 value={formData.priceDelta}
@@ -50,6 +64,7 @@ const CustomizationForm: React.FC<CustomizationFormProps> = ({ formData, setForm
                 className="w-full border rounded px-3 py-2"
                 required
             />
+            <div className="text-xs text-gray-500 mt-1">{formatPrice(formData.priceDelta)}</div>
         </div>
         <div className="flex justify-end space-x-3 pt-4">
             <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">Cancel</button>
