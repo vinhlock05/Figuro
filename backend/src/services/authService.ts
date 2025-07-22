@@ -71,15 +71,23 @@ export const resetPassword = async (token: string, newPassword: string) => {
     return true
 }
 
-export const sendVerification = async (user: any) => {
-    const token = crypto.randomBytes(32).toString('hex')
-    await prisma.user.update({ where: { id: user.id }, data: { verificationToken: token } })
-    await sendVerificationEmail(user.email, token)
+export const sendVerification = async (userId: number) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user) throw new Error('User not found')
+    // Generate 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    await prisma.user.update({ where: { id: userId }, data: { verificationToken: otp } })
+    await sendVerificationEmail(user.email, otp)
 }
 
-export const verifyEmail = async (token: string) => {
-    const user = await prisma.user.findFirst({ where: { verificationToken: token } })
-    if (!user) throw new Error('Invalid verification token')
+export const verifyEmail = async (otp: string) => {
+    // Find user with exact verification token
+    const user = await prisma.user.findFirst({
+        where: {
+            verificationToken: otp
+        }
+    })
+    if (!user) throw new Error('Invalid verification code')
     await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true, verificationToken: null } })
     return true
 } 

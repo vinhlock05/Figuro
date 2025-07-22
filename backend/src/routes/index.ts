@@ -4,6 +4,9 @@ import productRoutes from './products'
 import cartRoutes from './cart'
 import orderRoutes from './order'
 import adminRoutes from './admin'
+import paymentRoutes from './payment'
+import notificationRoutes from './notification'
+import orderTrackingRoutes from './orderTracking'
 
 export const registerRoutes = (app: Express) => {
     app.use('/api/auth', authRoutes)
@@ -11,4 +14,7 @@ export const registerRoutes = (app: Express) => {
     app.use('/api/cart', cartRoutes)
     app.use('/api/order', orderRoutes)
     app.use('/api/admin', adminRoutes)
+    app.use('/api/payment', paymentRoutes)
+    app.use('/api/notifications', notificationRoutes)
+    app.use('/api/order-tracking', orderTrackingRoutes)
 } 
