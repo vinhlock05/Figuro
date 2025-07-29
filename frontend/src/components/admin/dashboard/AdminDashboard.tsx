@@ -39,36 +39,41 @@ export const AdminDashboard: React.FC = () => {
         );
     }
 
-    const stats = [
-        {
-            name: 'Total Users',
-            value: dashboardStats.totalUsers,
-            icon: Users,
-            change: '+12%',
-            changeType: 'positive' as const,
-        },
-        {
-            name: 'Total Orders',
-            value: dashboardStats.totalOrders,
-            icon: ShoppingCart,
-            change: '+8%',
-            changeType: 'positive' as const,
-        },
-        {
-            name: 'Total Products',
-            value: dashboardStats.totalProducts,
-            icon: Package,
-            change: '+5%',
-            changeType: 'positive' as const,
-        },
-        {
-            name: 'Total Revenue',
-            value: `$${dashboardStats.totalRevenue.toLocaleString()}`,
-            icon: DollarSign,
-            change: '+15%',
-            changeType: 'positive' as const,
-        },
-    ];
+    // Map icon keys to icon components
+    const iconMap: Record<string, React.ElementType> = {
+        totalUsers: Users,
+        totalOrders: ShoppingCart,
+        totalRevenue: DollarSign,
+    };
+
+    // Config for stats fields
+    const statsConfig: Array<{
+        key: 'totalUsers' | 'totalOrders' | 'totalRevenue';
+        name: string;
+        icon: string;
+        isMoney?: boolean;
+        change?: string;
+        changeType?: 'positive' | 'negative';
+    }> = [
+            { key: 'totalUsers', name: 'Total Users', icon: 'totalUsers', change: '+0%', changeType: 'positive' },
+            { key: 'totalOrders', name: 'Total Orders', icon: 'totalOrders', change: '+0%', changeType: 'positive' },
+            { key: 'totalRevenue', name: 'Total Revenue', icon: 'totalRevenue', isMoney: true, change: '+0%', changeType: 'positive' },
+        ];
+
+    // Generate stats array dynamically
+    const stats = statsConfig.map(cfg => {
+        let value: string | number = dashboardStats[cfg.key];
+        if (cfg.isMoney && typeof value === 'number') {
+            value = `$${value.toLocaleString()}`;
+        }
+        return {
+            name: cfg.name,
+            value,
+            icon: iconMap[cfg.icon],
+            change: cfg.change || '+0%',
+            changeType: cfg.changeType || 'positive',
+        };
+    });
 
     return (
         <div className="space-y-6">
