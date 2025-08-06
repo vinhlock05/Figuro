@@ -74,6 +74,11 @@ class AuthService {
                 if (error.response?.status === 401) {
                     // Clear tokens on 401 error
                     this.clearTokens();
+
+                    // Redirect to login page if not already there
+                    if (window.location.pathname !== '/login') {
+                        window.location.href = '/login?expired=true';
+                    }
                 }
                 return Promise.reject(error);
             }

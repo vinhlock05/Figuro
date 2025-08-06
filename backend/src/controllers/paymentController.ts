@@ -5,7 +5,7 @@ import { sendResponse, sendError } from '../utils/response'
 
 export const createPayment = async (req: AuthRequest, res: Response) => {
     try {
-        const { orderId, gateway, returnUrl, cancelUrl, description } = req.body
+        const { orderId, gateway, returnUrl, cancelUrl, description, bankCode } = req.body
 
         // Validate required fields
         if (!orderId || !gateway || !returnUrl || !cancelUrl) {
@@ -31,7 +31,8 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
             gateway,
             returnUrl,
             cancelUrl,
-            description
+            description,
+            bankCode // Optional for VNPAY bank selection
         }
 
         const result = await paymentService.createPayment(paymentRequest)

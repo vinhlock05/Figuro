@@ -3,11 +3,14 @@ import { useAdmin } from '../../../contexts/AdminContext';
 import { useLocation } from 'react-router-dom';
 import OrderList from './OrderList';
 import OrderSearch from './OrderSearch';
+import OrderSort, { type SortConfig } from './OrderSort';
 import OrderPagination from './OrderPagination';
 import type { Order } from '../../../services/adminService';
-import { Clock, Package, Truck, CheckCircle, AlertCircle } from 'lucide-react';
+
 import ConfirmationDialog from '../../common/ConfirmationDialog';
 import ToastMessage, { type ToastType } from '../../common/ToastMessage';
+import { formatVND } from '../../../utils/currency';
+import { useOrderSorting } from '../../../hooks/useOrderSorting';
 
 export const OrdersManagement: React.FC = () => {
     const {
@@ -15,12 +18,14 @@ export const OrdersManagement: React.FC = () => {
         isLoadingOrders,
         fetchOrders,
         updateOrderStatus,
-        getOrderDetails
+        getOrderDetails,
+        deleteOrder
     } = useAdmin();
 
     const location = useLocation();
 
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'date', direction: 'desc' });
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [orderDetails, setOrderDetails] = useState<Order | null>(null);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -28,6 +33,7 @@ export const OrdersManagement: React.FC = () => {
     const [limit] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
     const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; orderId: number | null; status: Order['status'] | null }>({ open: false, orderId: null, status: null });
+    const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; orderId: number | null }>({ open: false, orderId: null });
     const [toast, setToast] = useState<{ open: boolean; type: ToastType; message: string }>({ open: false, type: 'success', message: '' });
 
     useEffect(() => {
@@ -71,44 +77,32 @@ export const OrdersManagement: React.FC = () => {
         }
     };
 
-    const getStatusColor = (status: Order['status']) => {
-        switch (status) {
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'processing':
-                return 'bg-blue-100 text-blue-800';
-            case 'shipped':
-                return 'bg-purple-100 text-purple-800';
-            case 'delivered':
-                return 'bg-green-100 text-green-800';
-            case 'cancelled':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
+    const handleDeleteOrder = (orderId: number) => {
+        setDeleteDialog({ open: true, orderId });
+    };
+
+    const confirmDeleteOrder = async () => {
+        if (deleteDialog.orderId == null) return;
+        try {
+            await deleteOrder(deleteDialog.orderId);
+            setToast({ open: true, type: 'success', message: 'Order deleted successfully.' });
+        } catch (error) {
+            setToast({ open: true, type: 'error', message: 'Failed to delete order.' });
+        } finally {
+            setDeleteDialog({ open: false, orderId: null });
         }
     };
 
-    const getStatusIcon = (status: Order['status']) => {
-        switch (status) {
-            case 'pending':
-                return <Clock className="h-4 w-4" />;
-            case 'processing':
-                return <Package className="h-4 w-4" />;
-            case 'shipped':
-                return <Truck className="h-4 w-4" />;
-            case 'delivered':
-                return <CheckCircle className="h-4 w-4" />;
-            case 'cancelled':
-                return <AlertCircle className="h-4 w-4" />;
-            default:
-                return <Clock className="h-4 w-4" />;
-        }
-    };
-
+    // Filter orders based on search term
     const filteredOrders = orders.filter(order =>
         order.id.toString().includes(searchTerm) ||
-        order.status.toLowerCase().includes(searchTerm.toLowerCase())
+        order.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.items.some(item => item.productName?.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+
+    // Apply sorting to filtered orders
+    const sortedOrders = useOrderSorting(filteredOrders, sortConfig);
 
     return (
         <div className="space-y-6">
@@ -117,15 +111,18 @@ export const OrdersManagement: React.FC = () => {
                 <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
                 <p className="text-gray-600">Manage orders and track status</p>
             </div>
-            {/* Search */}
-            <OrderSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            {/* Search and Sort */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+                <OrderSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                <OrderSort sortConfig={sortConfig} onSortChange={setSortConfig} />
+            </div>
             {/* Orders table */}
             {isLoadingOrders ? (
                 <div className="flex items-center justify-center h-64">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                 </div>
             ) : (
-                <OrderList orders={orders} onViewDetails={handleViewDetails} onStatusUpdate={handleStatusUpdate} />
+                <OrderList orders={sortedOrders} onViewDetails={handleViewDetails} onStatusUpdate={handleStatusUpdate} onDeleteOrder={handleDeleteOrder} />
             )}
             {/* Pagination UI */}
             <OrderPagination page={page} totalPages={totalPages} setPage={setPage} />
@@ -165,7 +162,7 @@ export const OrdersManagement: React.FC = () => {
                                         </div>
                                         <div>
                                             <h4 className="text-sm font-medium text-gray-500">Total Amount</h4>
-                                            <p className="text-sm text-gray-900">${typeof orderDetails.totalAmount === 'number' ? orderDetails.totalAmount.toFixed(2) : Number(orderDetails.totalAmount || 0).toFixed(2)}</p>
+                                            <p className="text-sm text-gray-900">{formatVND(orderDetails.totalPrice)}</p>
                                         </div>
                                         <div>
                                             <h4 className="text-sm font-medium text-gray-500">Created</h4>
@@ -193,9 +190,9 @@ export const OrdersManagement: React.FC = () => {
                                                 <div key={item.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                                                     <div>
                                                         <p className="text-sm font-medium text-gray-900">{item.productName}</p>
-                                                        <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                                                        <p className="text-xs text-gray-500">Quantity: {item.quantity}</p>
                                                     </div>
-                                                    <p className="text-sm text-gray-900">${typeof item.price === 'number' ? item.price.toFixed(2) : Number(item.price || 0).toFixed(2)}</p>
+                                                    <p className="text-sm text-gray-900">{formatVND(item.price)}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -216,6 +213,15 @@ export const OrdersManagement: React.FC = () => {
                 cancelText="Cancel"
                 onConfirm={confirmStatusUpdate}
                 onCancel={() => setConfirmDialog({ open: false, orderId: null, status: null })}
+            />
+            <ConfirmationDialog
+                open={deleteDialog.open}
+                title="Delete Order"
+                message="Are you sure you want to delete this order? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDeleteOrder}
+                onCancel={() => setDeleteDialog({ open: false, orderId: null })}
             />
             <ToastMessage
                 open={toast.open}

@@ -21,6 +21,7 @@ router.delete('/users/:id', authenticate, requireAdmin, adminRateLimit, adminCon
 router.get('/orders', authenticate, requireAdmin, adminRateLimit, adminController.listOrders)
 router.put('/orders/:orderId/status', authenticate, requireAdmin, adminRateLimit, adminController.updateOrderStatus)
 router.get('/orders/:orderId', authenticate, requireAdmin, adminRateLimit, adminController.getOrderDetails)
+router.delete('/orders/:orderId', authenticate, requireAdmin, adminRateLimit, adminController.deleteOrder)
 
 // Dashboard
 router.get('/dashboard', authenticate, requireAdmin, adminRateLimit, adminController.dashboard)

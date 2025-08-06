@@ -48,10 +48,10 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
                 <div className="max-w-md w-full space-y-8">
                     <div className="text-center">
                         <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                            Check your email
+                            Kiểm tra email
                         </h2>
                         <p className="mt-2 text-sm text-gray-600">
-                            We've sent a password reset link to your email address.
+                            Chúng tôi đã gửi link đặt lại mật khẩu đến địa chỉ email của bạn.
                         </p>
                         <div className="mt-6">
                             <button
@@ -59,7 +59,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
                                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200"
                             >
                                 <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back to login
+                                Quay lại đăng nhập
                             </button>
                         </div>
                     </div>
@@ -73,17 +73,17 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
             <div className="max-w-md w-full space-y-8">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Reset your password
+                        Đặt lại mật khẩu
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Enter your email address and we'll send you a link to reset your password.
+                        Nhập địa chỉ email và chúng tôi sẽ gửi link để đặt lại mật khẩu.
                     </p>
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     <div>
                         <label htmlFor="email" className="sr-only">
-                            Email address
+                            Địa chỉ email
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -95,7 +95,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
                                 type="email"
                                 autoComplete="email"
                                 className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                placeholder="Email address"
+                                placeholder="Địa chỉ email"
                             />
                         </div>
                         {errors.email && (
@@ -122,10 +122,10 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
                             {isSubmitting ? (
                                 <div className="flex items-center">
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Sending...
+                                    Đang gửi...
                                 </div>
                             ) : (
-                                'Send reset link'
+                                'Gửi link đặt lại'
                             )}
                         </button>
 
@@ -135,7 +135,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
                             className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to login
+                            Quay lại đăng nhập
                         </button>
                     </div>
                 </form>

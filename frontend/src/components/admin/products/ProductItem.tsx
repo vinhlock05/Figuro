@@ -34,7 +34,15 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onEdit, onDelete, ex
                 <div className="flex items-center justify-between">
                     <div className="flex items-center">
                         <div className="flex-shrink-0">
-                            <Package className="h-8 w-8 text-gray-400" />
+                            {product.imageUrl ? (
+                                <img
+                                    src={product.imageUrl}
+                                    alt={product.name}
+                                    className="h-8 w-8 object-cover rounded"
+                                />
+                            ) : (
+                                <Package className="h-8 w-8 text-gray-400" />
+                            )}
                         </div>
                         <div className="ml-4">
                             <div className="flex items-center">

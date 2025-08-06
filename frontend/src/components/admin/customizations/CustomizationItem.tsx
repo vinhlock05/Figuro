@@ -5,6 +5,7 @@ interface CustomizationItemProps {
     customization: CustomizationOption;
     onEdit: (customization: CustomizationOption) => void;
     onDelete: (id: number) => void;
+    showProductId?: boolean;
 }
 
 const formatPrice = (price: number) => {
@@ -16,15 +17,25 @@ const formatPrice = (price: number) => {
     }
 };
 
-const CustomizationItem: React.FC<CustomizationItemProps> = ({ customization, onEdit, onDelete }) => (
+const CustomizationItem: React.FC<CustomizationItemProps> = ({ customization, onEdit, onDelete, showProductId = true }) => (
     <tr key={customization.id}>
-        <td className="border px-4 py-2">{customization.productId}</td>
-        <td className="border px-4 py-2">{customization.optionType}</td>
-        <td className="border px-4 py-2">{customization.optionValue}</td>
-        <td className="border px-4 py-2">{formatPrice(customization.priceDelta)}</td>
-        <td className="border px-4 py-2">
-            <button onClick={() => onEdit(customization)} className="mr-2 text-blue-600">Edit</button>
-            <button onClick={() => onDelete(customization.id)} className="text-red-600">Delete</button>
+        {showProductId && <td className="border px-4 py-2">{customization.productId}</td>}
+        <td className="px-4 py-3 text-sm text-gray-900">{customization.optionType}</td>
+        <td className="px-4 py-3 text-sm text-gray-900">{customization.optionValue}</td>
+        <td className="px-4 py-3 text-sm text-gray-900">{formatPrice(customization.priceDelta)}</td>
+        <td className="px-4 py-3 text-sm">
+            <button
+                onClick={() => onEdit(customization)}
+                className="mr-3 text-indigo-600 hover:text-indigo-900 font-medium"
+            >
+                Edit
+            </button>
+            <button
+                onClick={() => onDelete(customization.id)}
+                className="text-red-600 hover:text-red-900 font-medium"
+            >
+                Delete
+            </button>
         </td>
     </tr>
 );

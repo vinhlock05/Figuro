@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AdminProvider } from './contexts/AdminContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { CartProvider } from './contexts/CartContext';
+import { useTokenExpiration } from './hooks/useTokenExpiration';
 import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
 import { ForgotPassword } from './components/auth/ForgotPassword';
@@ -9,6 +12,7 @@ import { ResetPassword } from './components/auth/ResetPassword';
 import { OTPVerification } from './components/auth/OTPVerification';
 import { Dashboard } from './components/Dashboard';
 import AdminLayout from './layouts/AdminLayout';
+import CustomerLayout from './layouts/CustomerLayout';
 import ProductsManagement from './components/admin/products/ProductsManagement';
 import UsersManagement from './components/admin/users/UsersManagement';
 import OrdersManagement from './components/admin/orders/OrdersManagement';
@@ -17,7 +21,19 @@ import { getAuthService } from './services';
 import AdminDashboard from './components/admin/dashboard/AdminDashboard';
 import CategoryManagement from './components/admin/categories/CategoryManagement';
 import CustomizationManagement from './components/admin/customizations/CustomizationManagement';
+import CustomerProfilePage from './components/customer/ProfilePage';
 import ProfilePage from './pages/ProfilePage';
+import { Loading } from './components/Loading';
+import CustomerDashboard from './components/customer/CustomerDashboard';
+import ProductsPage from './components/customer/ProductsPage';
+import CartPage from './components/customer/CartPage';
+import CheckoutPage from './components/customer/CheckoutPage';
+import OrdersPage from './components/customer/OrdersPage';
+import SearchResultsPage from './components/customer/SearchResultsPage';
+import WishlistPage from './components/customer/WishlistPage';
+import NotificationsPage from './components/customer/NotificationsPage';
+import ProductDetailPage from './components/customer/ProductDetailPage';
+import OrderDetailPage from './components/customer/OrderDetailPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'admin' | 'customer' }> = ({
@@ -170,6 +186,9 @@ const AuthRoutes: React.FC = () => {
 
 // Main App Component
 const AppRoutes: React.FC = () => {
+  // Use token expiration hook
+  useTokenExpiration();
+
   return (
     <Router>
       <Routes>
@@ -180,12 +199,120 @@ const AppRoutes: React.FC = () => {
         <Route path="/reset-password" element={<AuthRoutes />} />
         <Route path="/otp-verification" element={<AuthRoutes />} />
 
-        {/* Customer dashboard */}
+        {/* Customer routes */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute requiredRole="customer">
-              <Dashboard />
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <CustomerDashboard />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/products"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <ProductsPage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/products/:slug"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <ProductDetailPage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/orders/:orderId"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <OrderDetailPage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <CartPage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <CheckoutPage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <OrdersPage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/orders/:orderId"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <OrdersPage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <SearchResultsPage />
+                </CustomerLayout>
+              </ErrorBoundary>
             </ProtectedRoute>
           }
         />
@@ -216,8 +343,38 @@ const AppRoutes: React.FC = () => {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
-              <ProfilePage />
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <CustomerProfilePage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <WishlistPage />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <NotificationsPage />
+                </CustomerLayout>
+              </ErrorBoundary>
             </ProtectedRoute>
           }
         />
@@ -233,7 +390,11 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <NotificationProvider>
+        <CartProvider>
+          <AppRoutes />
+        </CartProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 };

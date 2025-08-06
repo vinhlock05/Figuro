@@ -7,6 +7,7 @@ import adminRoutes from './admin'
 import paymentRoutes from './payment'
 import notificationRoutes from './notification'
 import orderTrackingRoutes from './orderTracking'
+import wishlistRoutes from './wishlist'
 
 export const registerRoutes = (app: Express) => {
     app.use('/api/auth', authRoutes)
@@ -17,4 +18,5 @@ export const registerRoutes = (app: Express) => {
     app.use('/api/payment', paymentRoutes)
     app.use('/api/notifications', notificationRoutes)
     app.use('/api/order-tracking', orderTrackingRoutes)
+    app.use('/api/wishlist', wishlistRoutes)
 } 

@@ -20,9 +20,15 @@ const CustomizationList: React.FC<CustomizationListProps> = ({ customizations, o
             </tr>
         </thead>
         <tbody>
-            {customizations.map(customization => (
+            {Array.isArray(customizations) ? customizations.map(customization => (
                 <CustomizationItem key={customization.id} customization={customization} onEdit={onEdit} onDelete={onDelete} />
-            ))}
+            )) : (
+                <tr>
+                    <td colSpan={5} className="border px-4 py-2 text-center text-gray-500">
+                        No customizations available
+                    </td>
+                </tr>
+            )}
         </tbody>
     </table>
 );

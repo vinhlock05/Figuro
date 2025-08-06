@@ -31,6 +31,7 @@ model User {
   orders         Order[]
   notifications  Notification[]
   voiceAgentContexts VoiceAgentContext[]
+  wishlist       Wishlist[]
 
   @@map("users")
 }
@@ -66,6 +67,7 @@ model Product {
   customizationOptions CustomizationOption[]
   cartItems           CartItem[]
   orderItems          OrderItem[]
+  wishlistItems       Wishlist[]
 
   @@map("products")
 }
@@ -205,4 +207,19 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("notifications")
+}
+
+// Wishlist
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  productId Int      @map("product_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlist")
 }

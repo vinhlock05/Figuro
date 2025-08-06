@@ -22,6 +22,9 @@ interface AuthContextType {
     register: (userData: any) => Promise<void>;
     logout: () => Promise<void>;
     forceLogout: () => void;
+    // Token Management
+    checkTokenExpiration: () => boolean;
+    handleTokenExpiration: () => void;
     // Profile
     getProfile: () => Promise<void>;
     // Password Reset
@@ -69,6 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         // Clear invalid token
                         authService.clearTokens();
                         setUser(null);
+
+                        // Redirect to login if token is invalid
+                        if (window.location.pathname !== '/login') {
+                            window.location.href = '/login?expired=true';
+                        }
                     }
                 } else {
                     setUser(null);
@@ -141,6 +149,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const authService = getAuthService();
         authService.clearTokens();
         setUser(null);
+    };
+
+    // Token Management
+    const checkTokenExpiration = (): boolean => {
+        const token = localStorage.getItem('access_token');
+        if (!token) return true;
+
+        try {
+            // Decode JWT token to check expiration
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Date.now() / 1000;
+
+            // Check if token is expired (with 5 minutes buffer)
+            if (payload.exp && payload.exp < currentTime + 300) {
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error checking token expiration:', error);
+            return true;
+        }
+    };
+
+    const handleTokenExpiration = () => {
+        const authService = getAuthService();
+        authService.clearTokens();
+        setUser(null);
+
+        // Show notification and redirect to login
+        if (window.location.pathname !== '/login') {
+            window.location.href = '/login?expired=true';
+        }
     };
 
     // Profile
@@ -246,6 +286,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         register,
         logout,
         forceLogout,
+        checkTokenExpiration,
+        handleTokenExpiration,
         getProfile,
         requestPasswordReset,
         resetPassword,

@@ -100,6 +100,16 @@ export const getOrderDetails = async (req: Request, res: Response) => {
     }
 }
 
+export const deleteOrder = async (req: Request, res: Response) => {
+    try {
+        const { orderId } = req.params
+        await adminService.deleteOrder(Number(orderId))
+        return sendResponse(res, 200, 'Order deleted successfully')
+    } catch (error: any) {
+        return sendError(res, 400, error.message || 'Failed to delete order')
+    }
+}
+
 export const dashboard = async (req: Request, res: Response) => {
     try {
         const cached = await getCache(DASHBOARD_CACHE_KEY)
@@ -152,7 +162,7 @@ export const deleteCategory = async (req: Request, res: Response) => {
 export const listCustomizations = async (req: Request, res: Response) => {
     try {
         const productId = req.query.productId ? Number(req.query.productId) : undefined;
-        const customizations = await adminService.listCustomizations(productId, req.query);
+        const customizations = await adminService.listCustomizations(productId);
         return sendResponse(res, 200, 'Customizations fetched', { customizations });
     } catch (error: any) {
         return sendError(res, 500, error.message || 'Failed to fetch customizations');

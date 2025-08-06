@@ -31,6 +31,7 @@ export interface Product {
     slug?: string;
     category: Category;
     customizationOptions: CustomizationOption[];
+    orderCount?: number; // For top products analytics
 }
 
 export interface CreateProductData {
@@ -57,13 +58,26 @@ export interface User {
 export interface Order {
     id: number;
     userId: number;
-    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-    totalAmount: number;
+    status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+    totalPrice: string;
     items: OrderItem[];
     shippingAddress: string;
     createdAt: string;
     updatedAt: string;
     user?: User; // Add this line for customer info
+    paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+    payments?: Payment[];
+}
+
+export interface Payment {
+    id: number;
+    orderId: number;
+    paymentGateway: string;
+    amount: number;
+    status: string;
+    transactionId?: string;
+    paidAt?: string;
+    createdAt: string;
 }
 
 export interface OrderItem {
@@ -74,6 +88,11 @@ export interface OrderItem {
     price: number;
 }
 
+export interface OrdersByStatus {
+    status: string;
+    count: number;
+}
+
 export interface DashboardStats {
     totalUsers: number;
     totalOrders: number;
@@ -81,6 +100,7 @@ export interface DashboardStats {
     totalRevenue: number;
     recentOrders: Order[];
     topProducts: Product[];
+    ordersByStatus: OrdersByStatus[];
 }
 
 export interface Pagination {
@@ -160,6 +180,10 @@ class AdminService {
         return response.data.data.order;
     }
 
+    async deleteOrder(orderId: number): Promise<void> {
+        await this.api.delete(`/api/admin/orders/${orderId}`);
+    }
+
     // Dashboard
     async getDashboardStats(): Promise<DashboardStats> {
         const response = await this.api.get('/api/admin/dashboard');
@@ -212,10 +236,11 @@ class AdminService {
         const categories = response.data.data.categories;
         return { items: categories.items, pagination: categories.pagination };
     }
-    public async listCustomizations(query: any = {}): Promise<PaginatedResult<CustomizationOption>> {
-        const response = await this.api.get('/api/admin/customizations', { params: query });
-        const customizations = response.data.data.customizations;
-        return { items: customizations.items, pagination: customizations.pagination };
+    public async listCustomizations(productId?: number): Promise<CustomizationOption[]> {
+        const params = productId ? { productId } : {};
+        const response = await this.api.get('/api/admin/customizations', { params });
+        console.log('adminService.listCustomizations response:', response.data);
+        return response.data.data.customizations || [];
     }
 }
 

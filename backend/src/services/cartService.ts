@@ -1,5 +1,39 @@
 import { prisma } from '../lib/prisma'
 
+// Utility function to calculate dynamic price with customizations
+const calculateDynamicPrice = async (productId: number, quantity: number, customizations?: any) => {
+    const product = await prisma.product.findUnique({
+        where: { id: productId },
+        include: {
+            customizationOptions: true
+        }
+    })
+
+    if (!product) {
+        throw new Error('Product not found')
+    }
+
+    // Calculate base price
+    let totalPrice = Number(product.price)
+
+    // Calculate price adjustments from customizations
+    if (customizations && Array.isArray(customizations)) {
+        for (const customization of customizations) {
+            const option = product.customizationOptions.find(
+                opt => opt.optionType === customization.type &&
+                    opt.optionValue === customization.value
+            )
+
+            if (option) {
+                totalPrice += Number(option.priceDelta)
+            }
+        }
+    }
+
+    // Calculate total price for the quantity
+    return totalPrice * quantity
+}
+
 export const getCart = async (userId: number) => {
     let cart = await prisma.cart.findUnique({
         where: { userId },
@@ -32,13 +66,17 @@ export const addItem = async (userId: number, productId: number, quantity: numbe
     if (!cart) {
         cart = await prisma.cart.create({ data: { userId } })
     }
+
+    // Calculate dynamic price with customizations
+    const finalPrice = await calculateDynamicPrice(productId, quantity, customizations)
+
     return prisma.cartItem.create({
         data: {
             cartId: cart.id,
             productId,
             quantity,
             customizations,
-            price: 0 // You may want to calculate price with customizations
+            price: finalPrice
         }
     })
 }
@@ -48,9 +86,17 @@ export const updateItem = async (userId: number, cartItemId: number, quantity: n
     if (!cart) throw new Error('Cart not found')
     const item = await prisma.cartItem.findUnique({ where: { id: cartItemId } })
     if (!item || item.cartId !== cart.id) throw new Error('Item not found in your cart')
+
+    // Calculate dynamic price with customizations
+    const finalPrice = await calculateDynamicPrice(item.productId, quantity, customizations)
+
     return prisma.cartItem.update({
         where: { id: cartItemId },
-        data: { quantity, customizations }
+        data: {
+            quantity,
+            customizations,
+            price: finalPrice
+        }
     })
 }
 

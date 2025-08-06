@@ -120,10 +120,10 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
                         <Mail className="h-6 w-6 text-indigo-600" />
                     </div>
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                        Verify your email
+                        Xác thực email
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        We've sent a 6-digit code to
+                        Chúng tôi đã gửi mã 6 số đến
                     </p>
                     <p className="text-sm font-medium text-gray-900">{email}</p>
                 </div>
@@ -131,7 +131,7 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
                 <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                     <div>
                         <label htmlFor="otp" className="sr-only">
-                            Enter verification code
+                            Nhập mã xác thực
                         </label>
                         <div className="flex justify-center space-x-2">
                             {otp.map((digit, index) => (
@@ -153,7 +153,7 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
                             ))}
                         </div>
                         <p className="mt-2 text-xs text-gray-500 text-center">
-                            Enter the 6-digit code from your email
+                            Nhập mã 6 số từ email của bạn
                         </p>
                     </div>
 
@@ -176,10 +176,10 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
                             {isVerifying ? (
                                 <div className="flex items-center">
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Verifying...
+                                    Đang xác thực...
                                 </div>
                             ) : (
-                                'Verify Email'
+                                'Xác thực Email'
                             )}
                         </button>
 
@@ -192,12 +192,12 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
                             {isResending ? (
                                 <>
                                     <RefreshCw className="animate-spin h-4 w-4 mr-2" />
-                                    Sending...
+                                    Đang gửi...
                                 </>
                             ) : (
                                 <>
                                     <Mail className="h-4 w-4 mr-2" />
-                                    Resend code
+                                    Gửi lại mã
                                 </>
                             )}
                         </button>
@@ -208,7 +208,7 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
                             className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to login
+                            Quay lại đăng nhập
                         </button>
                     </div>
                 </form>

@@ -31,6 +31,7 @@ interface AdminContextType {
     fetchOrders: (params?: any) => Promise<any>;
     updateOrderStatus: (orderId: number, status: Order['status']) => Promise<Order>;
     getOrderDetails: (orderId: number) => Promise<Order>;
+    deleteOrder: (orderId: number) => Promise<void>;
 
     // Categories
     categories: Category[];
@@ -43,7 +44,7 @@ interface AdminContextType {
     // Customizations
     customizations: CustomizationOption[];
     isLoadingCustomizations: boolean;
-    fetchCustomizations: (params?: any) => Promise<any>;
+    fetchCustomizations: (productId?: number) => Promise<CustomizationOption[]>;
     addCustomization: (data: any) => Promise<CustomizationOption>;
     editCustomization: (id: number, data: any) => Promise<CustomizationOption>;
     removeCustomization: (id: number) => Promise<void>;
@@ -224,6 +225,16 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         }
     };
 
+    const deleteOrder = async (orderId: number) => {
+        try {
+            await adminService.deleteOrder(orderId);
+            setOrders(prev => prev.filter(o => o.id !== orderId));
+        } catch (error) {
+            console.error('Failed to delete order:', error);
+            throw error;
+        }
+    };
+
     // Category functions
     const fetchCategories = useCallback(async (params = {}) => {
         setIsLoadingCategories(true);
@@ -254,15 +265,19 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     };
 
     // Customization functions
-    const fetchCustomizations = useCallback(async (params = {}) => {
+    const fetchCustomizations = useCallback(async (productId?: number) => {
         setIsLoadingCustomizations(true);
         try {
-            const result = await adminService.listCustomizations(params);
-            setCustomizations(result.items);
-            return result;
+            const result = await adminService.listCustomizations(productId);
+            console.log('Fetched customizations:', result);
+            // Ensure result is always an array
+            const customizationsArray = Array.isArray(result) ? result : [];
+            setCustomizations(customizationsArray);
+            return customizationsArray;
         } catch (error) {
+            console.error('Error fetching customizations:', error);
             setCustomizations([]);
-            return null;
+            return [];
         } finally {
             setIsLoadingCustomizations(false);
         }
@@ -311,6 +326,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         fetchOrders,
         updateOrderStatus,
         getOrderDetails,
+        deleteOrder,
 
         // Categories
         categories,

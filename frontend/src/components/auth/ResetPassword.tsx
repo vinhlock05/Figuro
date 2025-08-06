@@ -59,10 +59,10 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
                 <div className="max-w-md w-full space-y-8">
                     <div className="text-center">
                         <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                            Password reset successful
+                            Đặt lại mật khẩu thành công
                         </h2>
                         <p className="mt-2 text-sm text-gray-600">
-                            Your password has been successfully reset. You can now log in with your new password.
+                            Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập với mật khẩu mới.
                         </p>
                         <div className="mt-6">
                             <button
@@ -70,7 +70,7 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
                                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                             >
                                 <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back to login
+                                Quay lại đăng nhập
                             </button>
                         </div>
                     </div>
@@ -84,10 +84,10 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
             <div className="max-w-md w-full space-y-8">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Set new password
+                        Đặt mật khẩu mới
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Enter your new password below.
+                        Nhập mật khẩu mới bên dưới.
                     </p>
                 </div>
 
@@ -95,7 +95,7 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
                     <div className="space-y-4">
                         <div>
                             <label htmlFor="newPassword" className="sr-only">
-                                New password
+                                Mật khẩu mới
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -107,7 +107,7 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
                                     type={showPassword ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="New password"
+                                    placeholder="Mật khẩu mới"
                                 />
                                 <button
                                     type="button"
@@ -128,7 +128,7 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
 
                         <div>
                             <label htmlFor="confirmPassword" className="sr-only">
-                                Confirm new password
+                                Xác nhận mật khẩu mới
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -140,7 +140,7 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="Confirm new password"
+                                    placeholder="Xác nhận mật khẩu mới"
                                 />
                                 <button
                                     type="button"
@@ -179,10 +179,10 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
                             {isSubmitting ? (
                                 <div className="flex items-center">
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Resetting...
+                                    Đang đặt lại...
                                 </div>
                             ) : (
-                                'Reset password'
+                                'Đặt lại mật khẩu'
                             )}
                         </button>
 
@@ -192,7 +192,7 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ token, onBackToLog
                             className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to login
+                            Quay lại đăng nhập
                         </button>
                     </div>
                 </form>

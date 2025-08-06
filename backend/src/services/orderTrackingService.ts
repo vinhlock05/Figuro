@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma'
-import NotificationService from './notificationService'
+import { sendOrderStatusUpdateEmail } from '../utils/notify'
 
 interface OrderStatusUpdate {
     orderId: number
@@ -53,7 +53,13 @@ class OrderTrackingService {
             // Get current order
             const order = await prisma.order.findUnique({
                 where: { id: orderId },
-                include: { user: true, statusHistory: { orderBy: { updatedAt: 'desc' }, take: 1 } }
+                include: {
+                    user: true,
+                    statusHistory: {
+                        orderBy: { updatedAt: 'desc' },
+                        take: 1
+                    }
+                }
             })
 
             if (!order) {
@@ -110,29 +116,23 @@ class OrderTrackingService {
             const order = await prisma.order.findUnique({
                 where: { id: orderId },
                 include: {
-                    statusHistory: {
-                        orderBy: { updatedAt: 'desc' }
-                    },
-                    user: true
+                    statusHistory: { orderBy: { updatedAt: 'desc' } }
                 }
             })
 
-            if (!order) {
-                return null
-            }
+            if (!order) return null
 
             const currentStatus = order.statusHistory[0]?.status || order.status
-
-            // Calculate estimated delivery based on status
             const estimatedDelivery = this.calculateEstimatedDelivery(order.createdAt, currentStatus)
+            const trackingNumber = this.generateTrackingNumber(order.id)
 
             return {
                 orderId: order.id,
                 currentStatus,
                 statusHistory: order.statusHistory,
                 estimatedDelivery,
-                trackingNumber: this.generateTrackingNumber(order.id),
-                shippingProvider: 'Vietnam Post' // Mock shipping provider
+                trackingNumber,
+                shippingProvider: 'Vietnam Post' // Default shipping provider
             }
         } catch (error) {
             console.error('Get order tracking error:', error)
@@ -142,29 +142,30 @@ class OrderTrackingService {
 
     // Calculate estimated delivery date
     private static calculateEstimatedDelivery(orderDate: Date, currentStatus: string): Date | undefined {
-        const deliveryDays: Record<string, number | undefined> = {
-            'pending': 7,
-            'confirmed': 6,
-            'processing': 5,
-            'shipped': 2,
-            'delivered': 0,
-            'cancelled': undefined,
-            'refunded': undefined
+        const deliveryTimes: Record<string, number> = {
+            'pending': 7, // 7 days from order
+            'confirmed': 6, // 6 days from order
+            'processing': 4, // 4 days from order
+            'shipped': 2, // 2 days from shipping
+            'delivered': 0, // Already delivered
+            'cancelled': 0, // No delivery
+            'refunded': 0 // No delivery
         }
 
-        const days = deliveryDays[currentStatus]
-        if (days === undefined) return undefined
+        const daysToAdd = deliveryTimes[currentStatus] || 0
+        if (daysToAdd === 0) return undefined
 
         const estimatedDate = new Date(orderDate)
-        estimatedDate.setDate(estimatedDate.getDate() + days)
+        estimatedDate.setDate(estimatedDate.getDate() + daysToAdd)
         return estimatedDate
     }
 
     // Generate tracking number
     private static generateTrackingNumber(orderId: number): string {
         const prefix = 'VN'
-        const timestamp = Date.now().toString().slice(-6)
+        const timestamp = Date.now().toString().slice(-8)
         const orderIdStr = orderId.toString().padStart(6, '0')
+
         return `${prefix}${timestamp}${orderIdStr}`
     }
 
@@ -176,15 +177,22 @@ class OrderTrackingService {
         description?: string
     ) {
         try {
-            // Send email notification
-            await NotificationService.sendOrderStatusUpdate(userId, order, newStatus)
+            // Get user email
+            const user = await prisma.user.findUnique({
+                where: { id: userId }
+            })
 
-            // Send SMS for important status updates
-            if (newStatus === 'shipped') {
-                await NotificationService.sendOrderShippedSMS(userId, order)
-            } else if (newStatus === 'delivered') {
-                await NotificationService.sendOrderDeliveredSMS(userId, order)
+            if (user?.email) {
+                // Send email notification
+                await sendOrderStatusUpdateEmail(user.email, order, newStatus, description)
             }
+
+            // TODO: Implement SMS notifications for important status updates
+            // if (newStatus === 'shipped') {
+            //     await sendOrderShippedSMS(userId, order)
+            // } else if (newStatus === 'delivered') {
+            //     await sendOrderDeliveredSMS(userId, order)
+            // }
         } catch (error) {
             console.error('Status update notification error:', error)
         }
@@ -293,7 +301,8 @@ class OrderTrackingService {
 
             // Send cancellation notification if userId exists
             if (order.userId) {
-                await NotificationService.sendOrderStatusUpdate(order.userId, order, 'cancelled')
+                // Email notification is handled in updateOrderStatus
+                console.log(`[ORDER] Order ${orderId} cancelled with reason: ${reason}`)
             }
 
             return true

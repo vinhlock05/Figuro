@@ -160,7 +160,7 @@ class VietnamesePaymentGateway {
                 embed_data: embedData,
                 item: orderInfo,
                 description: orderInfo,
-                bank_code: 'zalopayapp',
+
                 mac: mac
             }
 
@@ -228,7 +228,6 @@ class VietnamesePaymentGateway {
                 vnp_TmnCode: tmnCode,
                 vnp_Amount: amount,
                 vnp_CurrCode: 'VND',
-                vnp_BankCode: '',
                 vnp_TxnRef: transactionId,
                 vnp_OrderInfo: orderInfo,
                 vnp_OrderType: 'other',
@@ -363,16 +362,22 @@ export const createPayment = async (request: PaymentRequest): Promise<PaymentRes
             throw new Error('Order is not in pending status')
         }
 
+        // Use order's totalPrice as payment amount
+        const paymentRequest = {
+            ...request,
+            amount: Number(order.totalPrice) * 100
+        }
+
         // Process payment based on gateway
         switch (request.gateway) {
             case 'momo':
-                return await VietnamesePaymentGateway.processMoMoPayment(request)
+                return await VietnamesePaymentGateway.processMoMoPayment(paymentRequest)
             case 'zalopay':
-                return await VietnamesePaymentGateway.processZaloPayPayment(request)
+                return await VietnamesePaymentGateway.processZaloPayPayment(paymentRequest)
             case 'vnpay':
-                return await VietnamesePaymentGateway.processVNPAYPayment(request)
+                return await VietnamesePaymentGateway.processVNPAYPayment(paymentRequest)
             case 'cod':
-                return await VietnamesePaymentGateway.processCODPayment(request)
+                return await VietnamesePaymentGateway.processCODPayment(paymentRequest)
             default:
                 throw new Error('Unsupported payment gateway')
         }

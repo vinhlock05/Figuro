@@ -3,15 +3,14 @@ import { useAdmin } from '../../../contexts/AdminContext';
 import StatsGrid from './StatsGrid';
 import RecentOrders from './RecentOrders';
 import TopProducts from './TopProducts';
+import OrdersChart from './OrdersChart';
+import DataDebugger from './DataDebugger';
+import { formatVND } from '../../../utils/currency';
 import {
     Users,
     ShoppingCart,
-    Package,
     DollarSign,
-    TrendingUp,
-    TrendingDown,
-    Calendar,
-    Clock
+    Package
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -39,39 +38,44 @@ export const AdminDashboard: React.FC = () => {
         );
     }
 
+    // Debug logging
+    console.log('Dashboard Stats:', dashboardStats);
+    console.log('Recent Orders:', dashboardStats.recentOrders);
+    console.log('Top Products:', dashboardStats.topProducts);
+
     // Map icon keys to icon components
     const iconMap: Record<string, React.ElementType> = {
         totalUsers: Users,
         totalOrders: ShoppingCart,
+        totalProducts: Package,
         totalRevenue: DollarSign,
     };
 
     // Config for stats fields
     const statsConfig: Array<{
-        key: 'totalUsers' | 'totalOrders' | 'totalRevenue';
+        key: 'totalUsers' | 'totalOrders' | 'totalProducts' | 'totalRevenue';
         name: string;
         icon: string;
         isMoney?: boolean;
-        change?: string;
-        changeType?: 'positive' | 'negative';
     }> = [
-            { key: 'totalUsers', name: 'Total Users', icon: 'totalUsers', change: '+0%', changeType: 'positive' },
-            { key: 'totalOrders', name: 'Total Orders', icon: 'totalOrders', change: '+0%', changeType: 'positive' },
-            { key: 'totalRevenue', name: 'Total Revenue', icon: 'totalRevenue', isMoney: true, change: '+0%', changeType: 'positive' },
+            { key: 'totalUsers', name: 'Total Users', icon: 'totalUsers' },
+            { key: 'totalOrders', name: 'Total Orders', icon: 'totalOrders' },
+            { key: 'totalProducts', name: 'Total Products', icon: 'totalProducts' },
+            { key: 'totalRevenue', name: 'Total Revenue', icon: 'totalRevenue', isMoney: true },
         ];
 
     // Generate stats array dynamically
     const stats = statsConfig.map(cfg => {
         let value: string | number = dashboardStats[cfg.key];
-        if (cfg.isMoney && typeof value === 'number') {
-            value = `$${value.toLocaleString()}`;
+        if (cfg.isMoney) {
+            // Handle both string and number for totalRevenue
+            const numValue = typeof value === 'string' ? parseFloat(value) : value;
+            value = formatVND(numValue || 0);
         }
         return {
             name: cfg.name,
             value,
             icon: iconMap[cfg.icon],
-            change: cfg.change || '+0%',
-            changeType: cfg.changeType || 'positive',
         };
     });
 
@@ -86,11 +90,22 @@ export const AdminDashboard: React.FC = () => {
             {/* Stats grid */}
             <StatsGrid stats={stats} />
 
-            {/* Recent orders */}
-            <RecentOrders recentOrders={dashboardStats.recentOrders} />
+            {/* Charts and Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Orders Chart */}
+                <OrdersChart ordersByStatus={dashboardStats.ordersByStatus || []} />
+
+                {/* Recent orders */}
+                <RecentOrders recentOrders={dashboardStats.recentOrders} />
+            </div>
 
             {/* Top products */}
             <TopProducts topProducts={dashboardStats.topProducts} />
+
+            {/* Debug component - only in development */}
+            {import.meta.env.DEV && (
+                <DataDebugger data={dashboardStats} />
+            )}
         </div>
     );
 };

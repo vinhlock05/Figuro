@@ -1,28 +1,22 @@
-import { Router } from 'express'
-import * as notificationController from '../controllers/notificationController'
-import { authenticate } from '../middleware/auth'
+import { Router } from 'express';
+import * as notificationController from '../controllers/notificationController';
+import { authenticate } from '../middleware/auth';
 
-const router = Router()
+const router = Router();
 
-// All notification routes require authentication
-router.use(authenticate)
+// Notification routes - all require authentication
+router.use(authenticate);
 
 // Get user notifications
-router.get('/', notificationController.getUserNotifications)
-
-// Get unread notification count
-router.get('/unread-count', notificationController.getUnreadNotificationCount)
-
-// Get notification statistics
-router.get('/stats', notificationController.getNotificationStats)
+router.get('/', notificationController.getNotifications);
 
 // Mark notification as read
-router.put('/:notificationId/read', notificationController.markNotificationAsRead)
+router.put('/:notificationId/read', notificationController.markAsRead);
 
 // Mark all notifications as read
-router.put('/mark-all-read', notificationController.markAllNotificationsAsRead)
+router.put('/read-all', notificationController.markAllAsRead);
 
-// Delete notification
-router.delete('/:notificationId', notificationController.deleteNotification)
+// Get unread notification count
+router.get('/unread-count', notificationController.getUnreadCount);
 
-export default router 
+export default router; 

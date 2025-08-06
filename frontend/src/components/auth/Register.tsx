@@ -71,15 +71,15 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
             <div className="max-w-md w-full space-y-8">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Create your account
+                        Tạo tài khoản mới
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Or{' '}
+                        Hoặc{' '}
                         <button
                             onClick={onSwitchToLogin}
                             className="font-medium text-indigo-600 hover:text-indigo-500"
                         >
-                            sign in to your existing account
+                            đăng nhập vào tài khoản hiện có
                         </button>
                     </p>
                 </div>
@@ -88,7 +88,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
                     <div className="space-y-4">
                         <div>
                             <label htmlFor="name" className="sr-only">
-                                Full name
+                                Họ và tên
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -100,7 +100,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
                                     type="text"
                                     autoComplete="name"
                                     className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                    placeholder="Full name"
+                                    placeholder="Họ và tên"
                                 />
                             </div>
                             {errors.name && (
@@ -110,7 +110,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
 
                         <div>
                             <label htmlFor="email" className="sr-only">
-                                Email address
+                                Địa chỉ email
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -122,7 +122,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
                                     type="email"
                                     autoComplete="email"
                                     className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                    placeholder="Email address"
+                                    placeholder="Địa chỉ email"
                                 />
                             </div>
                             {errors.email && (
@@ -132,7 +132,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
 
                         <div>
                             <label htmlFor="password" className="sr-only">
-                                Password
+                                Mật khẩu
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -144,7 +144,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
                                     type={showPassword ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="Password"
+                                    placeholder="Mật khẩu"
                                 />
                                 <button
                                     type="button"
@@ -165,7 +165,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
 
                         <div>
                             <label htmlFor="confirmPassword" className="sr-only">
-                                Confirm password
+                                Xác nhận mật khẩu
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -177,7 +177,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="Confirm password"
+                                    placeholder="Xác nhận mật khẩu"
                                 />
                                 <button
                                     type="button"
@@ -216,10 +216,10 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
                             {isSubmitting ? (
                                 <div className="flex items-center">
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Creating account...
+                                    Đang tạo tài khoản...
                                 </div>
                             ) : (
-                                'Create account'
+                                'Tạo tài khoản'
                             )}
                         </button>
                     </div>

@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma'
 import { Prisma } from '@prisma/client'
+import { sendOrderConfirmationEmail } from '../utils/notify'
 
 export const placeOrder = async (userId: number, shippingAddress: string, paymentMethod: string) => {
     // Get user's cart
@@ -32,11 +33,27 @@ export const placeOrder = async (userId: number, shippingAddress: string, paymen
                 create: { status: 'pending' }
             }
         },
-        include: { items: true, statusHistory: true }
+        include: {
+            items: {
+                include: { product: true }
+            },
+            statusHistory: true,
+            user: true
+        }
     })
 
     // Clear cart
     await prisma.cartItem.deleteMany({ where: { cartId: cart.id } })
+
+    // Send order confirmation email
+    if (order.user?.email) {
+        try {
+            await sendOrderConfirmationEmail(order.user.email, order)
+        } catch (error) {
+            console.error('Failed to send order confirmation email:', error)
+            // Don't throw error to avoid breaking the order placement
+        }
+    }
 
     return order
 }

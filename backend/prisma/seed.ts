@@ -56,7 +56,7 @@ async function main() {
                 name: 'Naruto Uzumaki Figure',
                 description: 'High-quality figure of Naruto Uzumaki in his signature orange jumpsuit',
                 price: 1500000, // 1.5M VND
-                imageUrl: 'https://example.com/naruto-figure.jpg',
+                imageUrl: 'https://pos.nvncdn.com/f625c0-33854/ps/20241023_Ru46QXHFIr.jpeg',
                 isCustomizable: true,
                 stock: 50,
                 productionTimeDays: 7,
@@ -69,7 +69,7 @@ async function main() {
                 name: 'Sasuke Uchiha Figure',
                 description: 'Detailed figure of Sasuke Uchiha with his Sharingan',
                 price: 1800000, // 1.8M VND
-                imageUrl: 'https://example.com/sasuke-figure.jpg',
+                imageUrl: 'https://m.media-amazon.com/images/I/51Rl1qQRNpL.jpg',
                 isCustomizable: true,
                 stock: 30,
                 productionTimeDays: 10,
@@ -82,7 +82,7 @@ async function main() {
                 name: 'Monkey D. Luffy Figure',
                 description: 'Action figure of Luffy in his straw hat',
                 price: 2000000, // 2M VND
-                imageUrl: 'https://example.com/luffy-figure.jpg',
+                imageUrl: 'https://product.hstatic.net/200000462939/product/4215634_e11288e41d874eb2b964def8facc9cbf_medium.jpeg',
                 isCustomizable: false,
                 stock: 25,
                 slug: 'luffy-monkey-figure',
@@ -94,7 +94,7 @@ async function main() {
                 name: 'Goku Super Saiyan Figure',
                 description: 'Epic figure of Goku in Super Saiyan form',
                 price: 2500000, // 2.5M VND
-                imageUrl: 'https://example.com/goku-figure.jpg',
+                imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/71kW9aolunL.jpg',
                 isCustomizable: true,
                 stock: 20,
                 productionTimeDays: 14,
@@ -107,7 +107,7 @@ async function main() {
                 name: 'Tanjiro Kamado Figure',
                 description: 'Beautiful figure of Tanjiro with his sword',
                 price: 1700000, // 1.7M VND
-                imageUrl: 'https://example.com/tanjiro-figure.jpg',
+                imageUrl: 'https://m.media-amazon.com/images/I/51MbQXLw76S._AC_SL1000_.jpg',
                 isCustomizable: true,
                 stock: 40,
                 productionTimeDays: 8,

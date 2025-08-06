@@ -110,24 +110,93 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
     return prisma.order.update({ where: { id: orderId }, data: { status } })
 }
 export const getOrderDetails = async (orderId: number) => {
-    return prisma.order.findUnique({ where: { id: orderId }, include: { items: { include: { product: true } }, statusHistory: true, user: true } })
+    return prisma.order.findUnique({ where: { id: orderId }, include: { items: { include: { product: true } }, statusHistory: true, user: true, payments: true } })
+}
+
+export const deleteOrder = async (orderId: number) => {
+    return prisma.order.delete({ where: { id: orderId } })
 }
 
 export const getDashboardStats = async () => {
-    const [userCount, orderCount, totalRevenue, ordersByStatus] = await Promise.all([
+    const [userCount, orderCount, productCount, totalRevenue, ordersByStatus, recentOrders, topProducts] = await Promise.all([
         prisma.user.count(),
         prisma.order.count(),
+        prisma.product.count(),
         prisma.order.aggregate({ _sum: { totalPrice: true } }),
         prisma.order.groupBy({
             by: ['status'],
             _count: { status: true }
+        }),
+        // Recent orders (last 10)
+        prisma.order.findMany({
+            take: 10,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                user: { select: { name: true } },
+                items: {
+                    include: {
+                        product: { select: { name: true } }
+                    }
+                }
+            }
+        }),
+        // Top products by order count
+        prisma.product.findMany({
+            take: 10,
+            include: {
+                _count: {
+                    select: { orderItems: true }
+                }
+            },
+            orderBy: {
+                orderItems: {
+                    _count: 'desc'
+                }
+            }
         })
     ])
+
+    // Format recent orders
+    const formattedRecentOrders = recentOrders.map(order => ({
+        id: order.id,
+        userId: order.userId,
+        status: order.status,
+        totalPrice: order.totalPrice,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+        shippingAddress: order.shippingAddress,
+        user: order.user,
+        items: order.items.map(item => ({
+            id: item.id,
+            productId: item.productId,
+            productName: item.product.name,
+            quantity: item.quantity,
+            price: item.price
+        }))
+    }))
+
+    // Format top products
+    const formattedTopProducts = topProducts.map(product => ({
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        stock: product.stock,
+        imageUrl: product.imageUrl,
+        orderCount: product._count.orderItems
+    }))
+
     return {
-        userCount,
-        orderCount,
-        totalRevenue: totalRevenue._sum.totalPrice || 0,
-        ordersByStatus: ordersByStatus.map((o: { status: string, _count: { status: number } }) => ({ status: o.status, count: o._count.status }))
+        totalUsers: userCount,
+        totalOrders: orderCount,
+        totalProducts: productCount,
+        totalRevenue: Number(totalRevenue._sum.totalPrice) || 0,
+        ordersByStatus: ordersByStatus.map((o: { status: string, _count: { status: number } }) => ({
+            status: o.status,
+            count: o._count.status
+        })),
+        recentOrders: formattedRecentOrders,
+        topProducts: formattedTopProducts
     }
 }
 
@@ -161,30 +230,49 @@ export const deleteCategory = async (id: number) => {
 };
 
 // Customization Option Management
-export const listCustomizations = async (productId?: number, query: any = {}) => {
-    const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
-    const skip = (page - 1) * limit;
+export const listCustomizations = async (productId?: number) => {
     const where = productId ? { productId } : {};
-    const [items, total] = await Promise.all([
-        prisma.customizationOption.findMany({ where, skip, take: limit }),
-        prisma.customizationOption.count({ where })
-    ]);
-    return {
-        items,
-        pagination: {
-            page,
-            limit,
-            total,
-            pages: Math.ceil(total / limit)
-        }
-    };
+    const items = await prisma.customizationOption.findMany({
+        where,
+        include: { product: true },
+        orderBy: { productId: 'asc' }
+    });
+    return items;
 };
 export const createCustomization = async (data: any) => {
-    return prisma.customizationOption.create({ data });
+    // Convert productId to integer if it's a string
+    const productId = parseInt(data.productId);
+    if (isNaN(productId)) {
+        throw new Error('Invalid productId: must be a valid number');
+    }
+
+    const processedData = {
+        ...data,
+        productId,
+        priceDelta: parseFloat(data.priceDelta) || 0
+    };
+
+    return prisma.customizationOption.create({ data: processedData });
 };
 export const updateCustomization = async (id: number, data: any) => {
-    return prisma.customizationOption.update({ where: { id }, data });
+    // Convert productId to integer if it's a string and present
+    const processedData = {
+        ...data
+    };
+
+    if (data.productId !== undefined) {
+        const productId = parseInt(data.productId);
+        if (isNaN(productId)) {
+            throw new Error('Invalid productId: must be a valid number');
+        }
+        processedData.productId = productId;
+    }
+
+    if (data.priceDelta !== undefined) {
+        processedData.priceDelta = parseFloat(data.priceDelta) || 0;
+    }
+
+    return prisma.customizationOption.update({ where: { id }, data: processedData });
 };
 export const deleteCustomization = async (id: number) => {
     return prisma.customizationOption.delete({ where: { id } });

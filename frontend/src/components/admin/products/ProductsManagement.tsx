@@ -29,9 +29,6 @@ export const ProductsManagement: React.FC = () => {
         categories,
         isLoadingCategories,
         fetchCategories,
-        customizations,
-        isLoadingCustomizations,
-        fetchCustomizations,
     } = useAdmin();
 
     const location = useLocation();
@@ -47,7 +44,7 @@ export const ProductsManagement: React.FC = () => {
         category: '',
         imageUrl: '',
     });
-    const [selectedCustomizations, setSelectedCustomizations] = useState<number[]>([]);
+
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
@@ -63,7 +60,6 @@ export const ProductsManagement: React.FC = () => {
         };
         fetch();
         fetchCategories();
-        fetchCustomizations();
         // eslint-disable-next-line
     }, [page, limit, location.pathname]);
 
@@ -73,7 +69,6 @@ export const ProductsManagement: React.FC = () => {
             const submitData = {
                 ...formData,
                 categoryId: Number(formData.category),
-                customizationOptionIds: selectedCustomizations,
             };
             if (editingProduct) {
                 await updateProduct(editingProduct.id, submitData);
@@ -85,7 +80,6 @@ export const ProductsManagement: React.FC = () => {
             setIsModalOpen(false);
             setEditingProduct(null);
             resetForm();
-            setSelectedCustomizations([]);
         } catch (error) {
             setToast({ open: true, type: 'error', message: 'Failed to save product.' });
             console.error('Failed to save product:', error);
@@ -102,7 +96,7 @@ export const ProductsManagement: React.FC = () => {
             category: String(product.category.id),
             imageUrl: product.imageUrl || '',
         });
-        setSelectedCustomizations(product.customizationOptions.map(opt => opt.id));
+
         setIsModalOpen(true);
     };
 
@@ -122,11 +116,7 @@ export const ProductsManagement: React.FC = () => {
         }
     };
 
-    const handleCustomizationChange = (id: number) => {
-        setSelectedCustomizations(prev =>
-            prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id]
-        );
-    };
+
 
     const resetForm = () => {
         setFormData({
@@ -137,7 +127,7 @@ export const ProductsManagement: React.FC = () => {
             category: '',
             imageUrl: '',
         });
-        setSelectedCustomizations([]);
+
     };
 
     const filteredProducts = products.filter(product => {
@@ -194,11 +184,7 @@ export const ProductsManagement: React.FC = () => {
                             <ProductForm
                                 formData={formData}
                                 setFormData={setFormData}
-                                selectedCustomizations={selectedCustomizations}
-                                setSelectedCustomizations={setSelectedCustomizations}
                                 categories={categories}
-                                customizations={customizations}
-                                isLoadingCustomizations={isLoadingCustomizations}
                                 onSubmit={handleSubmit}
                                 onCancel={() => {
                                     setIsModalOpen(false);
