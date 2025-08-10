@@ -90,10 +90,26 @@ export const listOrders = async (query: any) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
-    const [items, total] = await Promise.all([
-        prisma.order.findMany({ skip, take: limit, include: { items: { include: { product: true } }, statusHistory: true, user: true } }),
+    const [rawItems, total] = await Promise.all([
+        prisma.order.findMany({
+            skip,
+            take: limit,
+            include: {
+                items: { include: { product: true } },
+                statusHistory: true,
+                user: true,
+                payments: { orderBy: { createdAt: 'desc' }, take: 1 }
+            }
+        }),
         prisma.order.count()
     ]);
+
+    // Derive paymentStatus from latest payment if present
+    const items = rawItems.map((order) => ({
+        ...order,
+        paymentStatus: order.payments && order.payments.length > 0 ? order.payments[0].status : 'pending'
+    }));
+
     return {
         items,
         pagination: {

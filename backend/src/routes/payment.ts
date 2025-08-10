@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { createPayment, handlePaymentCallback, getPaymentStatus, getOrderPayments } from '../services/paymentService';
+import crypto from 'crypto';
+import qs from 'qs';
+import { prisma } from '../lib/prisma';
+import { createPayment, getPaymentStatus, getOrderPayments, processVnpayReturn, processZaloPayCallback, processMomoCallback } from '../services/paymentService';
+import * as paymentService from '../services/paymentService';
 import { authenticate } from '../middleware/auth';
 import { sendResponse, sendError } from '../utils/response';
 
@@ -37,48 +41,27 @@ router.post('/create', authenticate, async (req, res) => {
 // VNPay return callback (GET method for VNPay redirects)
 router.get('/vnpay-return', async (req, res) => {
     try {
-        // VNPay returns data via query parameters
-        const vnpayData = req.query;
-
-        // Log the return data for debugging
-        console.log('VNPay return data:', vnpayData);
-
-        // TODO: Verify signature and update order status
-        // For now, just redirect to success page
-        res.redirect(`http://localhost:5173/orders/${vnpayData.vnp_TxnRef}?status=success`);
+        const vnpParams: any = { ...req.query };
+        const redirectUrl = await processVnpayReturn(vnpParams);
+        return res.redirect(redirectUrl);
     } catch (error: any) {
         console.error('VNPay return error:', error);
-        res.redirect('http://localhost:5173/checkout?error=payment_failed');
+        const fallback = `${process.env.WEB_BASE_URL || 'http://localhost:5173'}/checkout/result?status=failed`;
+        return res.redirect(fallback);
     }
 });
 
-// Payment callback
-router.post('/callback', async (req, res) => {
-    try {
-        const { transactionId, status, amount, gateway, signature } = req.body;
-
-        if (!transactionId || !status || !gateway) {
-            return sendError(res, 400, 'Missing required callback parameters');
-        }
-
-        const success = await handlePaymentCallback({
-            transactionId,
-            status,
-            amount,
-            gateway,
-            signature
-        });
-
-        if (success) {
-            return sendResponse(res, 200, 'Payment callback processed successfully');
-        } else {
-            return sendError(res, 400, 'Payment callback processing failed');
-        }
-    } catch (error: any) {
-        console.error('Payment callback error:', error);
-        return sendError(res, 500, error.message || 'Internal server error');
-    }
+// ZaloPay callback
+router.post('/zalopay-callback', async (req, res) => {
+    const result = await processZaloPayCallback(req.body);
+    return res.json(result);
 });
+
+// Momo callback
+router.post('/momo-callback', async (req, res) => {
+    const code = await processMomoCallback(req.body);
+    return res.sendStatus(code);
+})
 
 // Get payment status
 router.get('/status/:transactionId', authenticate, async (req, res) => {

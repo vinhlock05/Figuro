@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AdminProvider } from './contexts/AdminContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { CartProvider } from './contexts/CartContext';
+import { VoiceProvider } from './contexts/VoiceContext';
 import { useTokenExpiration } from './hooks/useTokenExpiration';
 import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
@@ -34,6 +35,7 @@ import WishlistPage from './components/customer/WishlistPage';
 import NotificationsPage from './components/customer/NotificationsPage';
 import ProductDetailPage from './components/customer/ProductDetailPage';
 import OrderDetailPage from './components/customer/OrderDetailPage';
+import CheckoutResult from './components/customer/CheckoutResult';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'admin' | 'customer' }> = ({
@@ -279,6 +281,19 @@ const AppRoutes: React.FC = () => {
         />
 
         <Route
+          path="/checkout/result"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <ErrorBoundary>
+                <CustomerLayout>
+                  <CheckoutResult />
+                </CustomerLayout>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/orders"
           element={
             <ProtectedRoute requiredRole="customer">
@@ -392,7 +407,9 @@ const App: React.FC = () => {
     <AuthProvider>
       <NotificationProvider>
         <CartProvider>
-          <AppRoutes />
+          <VoiceProvider>
+            <AppRoutes />
+          </VoiceProvider>
         </CartProvider>
       </NotificationProvider>
     </AuthProvider>

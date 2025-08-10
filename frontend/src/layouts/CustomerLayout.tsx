@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { useVoice } from '../contexts/VoiceContext';
 import { customerService } from '../services/customerService';
 import type { Product } from '../services/customerService';
 import { formatVND } from '../utils/currency';
+import VoiceAgentButton from '../components/common/VoiceAgentButton';
+import VoiceAgentModal from '../components/common/VoiceAgentModal';
 import {
     Home,
     ShoppingBag,
@@ -16,7 +19,8 @@ import {
     Menu,
     X,
     Heart,
-    LogOut
+    LogOut,
+    Mic
 } from 'lucide-react';
 
 interface CustomerLayoutProps {
@@ -26,6 +30,7 @@ interface CustomerLayoutProps {
 const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     const { user, logout } = useAuth();
     const { cartItemCount } = useCart();
+    //const { openVoiceModal, isSupported: isVoiceSupported } = useVoice();
     const location = useLocation();
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -291,6 +296,17 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
                                 )}
                             </Link>
 
+                            {/* Voice Agent (Header) - Commented out to reduce clutter */}
+                            {/* {isVoiceSupported && (
+                                <button
+                                    onClick={openVoiceModal}
+                                    className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                                    title="Trợ lý ảo"
+                                >
+                                    <Mic className="h-6 w-6" />
+                                </button>
+                            )} */}
+
                             {/* Cart */}
                             <Link
                                 to="/cart"
@@ -330,6 +346,12 @@ const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
                     </div>
                 </main>
             </div>
+
+            {/* Floating Voice Agent Button */}
+            <VoiceAgentButton />
+
+            {/* Voice Agent Modal */}
+            <VoiceAgentModal />
         </div>
     );
 };

@@ -59,14 +59,21 @@ export const placeOrder = async (userId: number, shippingAddress: string, paymen
 }
 
 export const getUserOrders = async (userId: number) => {
-    return prisma.order.findMany({
+    const orders = await prisma.order.findMany({
         where: { userId },
         include: {
             items: { include: { product: true } },
-            statusHistory: true
+            statusHistory: true,
+            payments: { orderBy: { createdAt: 'desc' }, take: 1 }
         },
         orderBy: { createdAt: 'desc' }
     })
+
+    // Attach derived paymentStatus from latest payment (default to 'pending')
+    return orders.map((o: any) => ({
+        ...o,
+        paymentStatus: o.payments && o.payments.length > 0 ? o.payments[0].status : 'pending'
+    }))
 }
 
 export const getOrderDetails = async (userId: number, orderId: number) => {
@@ -74,9 +81,13 @@ export const getOrderDetails = async (userId: number, orderId: number) => {
         where: { id: orderId },
         include: {
             items: { include: { product: true } },
-            statusHistory: true
+            statusHistory: true,
+            payments: { orderBy: { createdAt: 'desc' }, take: 1 }
         }
     })
     if (!order || order.userId !== userId) throw new Error('Order not found')
-    return order
+    return {
+        ...order,
+        paymentStatus: order.payments && order.payments.length > 0 ? order.payments[0].status : 'pending'
+    }
 } 

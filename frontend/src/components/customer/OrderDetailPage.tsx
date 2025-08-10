@@ -22,6 +22,7 @@ const OrderDetailPage: React.FC = () => {
     const { orderId } = useParams<{ orderId: string }>();
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
+    const [processingPayment, setProcessingPayment] = useState<boolean>(false);
 
     useEffect(() => {
         if (orderId) {
@@ -113,6 +114,25 @@ const OrderDetailPage: React.FC = () => {
         }
     };
 
+    const handlePayAgain = async () => {
+        if (!order) return;
+        if (order.paymentMethod === 'cod') return;
+        try {
+            setProcessingPayment(true);
+            const result = await customerService.createPayment(order.id, order.paymentMethod as string);
+            if (result.success && result.paymentUrl) {
+                const redirectUrl = result.paymentUrl as string;
+                window.location.href = redirectUrl;
+            } else {
+                setProcessingPayment(false);
+                console.error('Recreate payment failed:', result.error || 'unknown_error');
+            }
+        } catch (error) {
+            setProcessingPayment(false);
+            console.error('Recreate payment error:', error);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-96">
@@ -151,7 +171,7 @@ const OrderDetailPage: React.FC = () => {
                         <ArrowLeft className="h-4 w-4 mr-1" />
                         Quay lại đơn hàng
                     </Link>
-                    <h1 className="text-2xl font-bold text-gray-900">Chi tiết đơn hàng #{order.orderNumber}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Chi tiết đơn hàng #{order.id}</h1>
                 </div>
             </div>
 
@@ -280,6 +300,24 @@ const OrderDetailPage: React.FC = () => {
                                                 order.paymentMethod}
                             </p>
                         </div>
+                        {order.paymentStatus !== 'paid' && order.paymentMethod !== 'cod' && order.status !== 'cancelled' && (
+                            <div className="mt-4">
+                                <button
+                                    onClick={handlePayAgain}
+                                    disabled={processingPayment}
+                                    className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                >
+                                    {processingPayment ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                            Đang chuyển đến cổng thanh toán...
+                                        </>
+                                    ) : (
+                                        <>Thanh toán lại</>
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

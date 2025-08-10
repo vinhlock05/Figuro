@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { adminService } from '../services/adminService';
 import type { DashboardStats, Product, User, Order } from '../services/adminService';
 import type { Category, CustomizationOption } from '../services/adminService';
-import { debounce } from '../utils/debounce';
+
 
 interface AdminContextType {
     // Dashboard
@@ -189,20 +189,20 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     };
 
     // Order functions
-    const fetchOrders = useCallback(async () => {
-        // Prevent multiple simultaneous calls
-        if (isLoadingOrders) return;
-
+    const fetchOrders = useCallback(async (params: any = {}) => {
         try {
             setIsLoadingOrders(true);
-            const ordersList = await adminService.listOrders();
-            setOrders(ordersList.items);
+            const result = await adminService.listOrders(params);
+            setOrders(result.items);
+            return result;
         } catch (error) {
             console.error('Failed to fetch orders:', error);
+            setOrders([]);
+            return null;
         } finally {
             setIsLoadingOrders(false);
         }
-    }, [isLoadingOrders]);
+    }, []);
 
     const updateOrderStatus = async (orderId: number, status: Order['status']) => {
         try {

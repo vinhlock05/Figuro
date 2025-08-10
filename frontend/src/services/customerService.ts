@@ -62,6 +62,7 @@ export interface Order {
     totalPrice: string;
     status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
     paymentStatus: 'pending' | 'paid' | 'failed';
+    paymentMethod: string;
     shippingAddress: string;
     billingAddress: string;
     createdAt: string;
@@ -323,10 +324,25 @@ class CustomerService {
         const response = await axios.post(`${API_BASE_URL}/api/payment/create`, {
             orderId: parseInt(orderId),
             gateway: paymentMethod,
-            returnUrl: `${window.location.origin}/orders/${orderId}`,
-            cancelUrl: `${window.location.origin}/orders/${orderId}`,
+            returnUrl: `${window.location.origin}/checkout/result?orderId=${orderId}`,
+            cancelUrl: `${window.location.origin}/checkout/result?orderId=${orderId}&status=cancelled`,
             description: `Thanh+toan+don+hang+${orderId}`
         }, {
+            headers: this.getAuthHeaders(),
+        });
+        return response.data.data;
+    }
+
+    async getPaymentStatus(transactionId: string): Promise<{
+        transactionId: string;
+        status: 'success' | 'failed' | 'pending';
+        amount: number;
+        gateway: string;
+        paidAt: string | null;
+        orderId: number;
+        orderStatus: string;
+    }> {
+        const response = await axios.get(`${API_BASE_URL}/api/payment/status/${transactionId}`, {
             headers: this.getAuthHeaders(),
         });
         return response.data.data;

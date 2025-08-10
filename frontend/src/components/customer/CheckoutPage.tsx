@@ -5,18 +5,7 @@ import type { Cart, Address } from '../../services/customerService';
 import { formatVND } from '../../utils/currency';
 import ToastMessage, { type ToastType } from '../common/ToastMessage';
 import { useCart } from '../../contexts/CartContext';
-import {
-    CreditCard,
-    Truck,
-    MapPin,
-    User,
-    Phone,
-    Mail,
-    ArrowLeft,
-    Lock,
-    Shield,
-    CheckCircle
-} from 'lucide-react';
+import { CreditCard, Truck, ArrowLeft, Lock, Shield } from 'lucide-react';
 
 interface CheckoutFormData {
     shippingAddress: Address;
@@ -197,10 +186,10 @@ const CheckoutPage: React.FC = () => {
                         });
 
                         // Redirect to actual payment gateway
+                        const redirectUrl = paymentResult.paymentUrl as string;
                         setTimeout(() => {
-                            window.open(paymentResult.paymentUrl, '_blank');
-                            navigate(`/orders/${order.id}`);
-                        }, 1500);
+                            window.location.href = redirectUrl;
+                        }, 1200);
                         return;
                     } else {
                         throw new Error(paymentResult.error || 'Không thể tạo thanh toán');

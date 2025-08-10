@@ -28,6 +28,7 @@
     "chalk": "^5.4.1",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
+    "dateformat": "^5.0.3",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
@@ -36,10 +37,12 @@
     "nodemon": "^3.1.10",
     "pg": "^8.16.3",
     "prisma": "^6.12.0",
+    "qs": "^6.14.0",
     "resend": "^4.7.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
+    "@types/dateformat": "^5.0.3",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.13",

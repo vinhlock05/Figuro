@@ -105,6 +105,27 @@ const CustomerDashboard: React.FC = () => {
         }
     };
 
+    const getOrderStatusText = (status: string) => {
+        switch (status) {
+            case 'pending':
+                return 'Chờ xử lý';
+            case 'confirmed':
+                return 'Đã xác nhận';
+            case 'processing':
+                return 'Đang xử lý';
+            case 'shipped':
+                return 'Đã gửi hàng';
+            case 'delivered':
+                return 'Đã giao hàng';
+            case 'cancelled':
+                return 'Đã hủy';
+            case 'refunded':
+                return 'Đã hoàn tiền';
+            default:
+                return status;
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-96">
@@ -212,7 +233,7 @@ const CustomerDashboard: React.FC = () => {
                                     </div>
                                     <div className="flex items-center space-x-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getOrderStatusColor(order.status)}`}>
-                                            {order.status}
+                                            {getOrderStatusText(order.status)}
                                         </span>
                                         <span className="text-sm font-medium text-gray-900">
                                             {formatVND(parseFloat(order.totalPrice) || 0)}

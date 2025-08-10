@@ -42,6 +42,7 @@ app.get('/', (req, res) => {
             notifications: '/api/notifications',
             orderTracking: '/api/order-tracking',
             admin: '/api/admin',
+            voiceAgent: '/api/voice-agent',
             health: '/health'
         }
     })
