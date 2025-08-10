@@ -1,0 +1,64 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: figuro_db
+      POSTGRES_USER: figuro_user
+      POSTGRES_PASSWORD: figuro_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: figuro/frontend:dev
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+      - voice-agent
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: figuro/backend:dev
+    environment:
+      - DATABASE_URL=postgresql://figuro_user:figuro_password@postgres:5432/figuro_db
+      - PORT=3000
+      - NODE_ENV=development
+      - FRONTEND_URL=http://localhost:3000
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=local-dev-secret
+    ports:
+      - "3001:3000"
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  voice-agent:
+    build:
+      context: ./voice-agent
+      dockerfile: Dockerfile
+    image: figuro/voice-agent:dev
+    environment:
+      - LOG_LEVEL=INFO
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
