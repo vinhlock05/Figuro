@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Order } from '../services/adminService';
-import type { SortConfig, SortField, SortDirection } from '../components/admin/orders/OrderSort';
+import type { SortConfig } from '../components/admin/orders/OrderSort';
 
 export const useOrderSorting = (orders: Order[], sortConfig: SortConfig) => {
     const sortedOrders = useMemo(() => {

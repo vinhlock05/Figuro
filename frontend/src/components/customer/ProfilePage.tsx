@@ -1,17 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
     User,
-    Mail,
-    Phone,
-    MapPin,
     Shield,
-    Key,
     Bell,
     CreditCard,
-    Heart,
-    Package,
-    Settings
 } from 'lucide-react';
 
 const CustomerProfilePage: React.FC = () => {

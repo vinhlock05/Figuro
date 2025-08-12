@@ -578,6 +578,7 @@ class VoiceService {
                 };
 
                 mediaRecorder.onerror = (_event) => {
+                    console.error('Recording error:', _event);
                     stream.getTracks().forEach(track => track.stop());
                     reject(new Error('Recording failed'));
                 };
@@ -592,6 +593,7 @@ class VoiceService {
                 }, duration);
 
             } catch (error) {
+                console.error('Microphone access error:', error);
                 reject(new Error('Failed to access microphone'));
             }
         });

@@ -12,7 +12,6 @@ import {
     List,
     ShoppingCart,
     Heart,
-    ChevronDown,
     X,
     Settings,
     Package

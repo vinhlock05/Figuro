@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { getAuthService } from '../services';
-import type { AuthResponse, PasswordResetRequest, PasswordReset, EmailVerification } from '../services/authService';
+import type { AuthResponse } from '../services/authService';
 
 interface User {
     id: number;
@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             setIsLoading(true);
             const authService = getAuthService();
-            const response: AuthResponse = await authService.register(userData);
+            await authService.register(userData);
             // Don't set user or token after registration - user needs to verify email first
             // setUser(response.user);
         } catch (error) {

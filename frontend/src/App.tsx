@@ -11,7 +11,6 @@ import { Register } from './components/auth/Register';
 import { ForgotPassword } from './components/auth/ForgotPassword';
 import { ResetPassword } from './components/auth/ResetPassword';
 import { OTPVerification } from './components/auth/OTPVerification';
-import { Dashboard } from './components/Dashboard';
 import AdminLayout from './layouts/AdminLayout';
 import CustomerLayout from './layouts/CustomerLayout';
 import ProductsManagement from './components/admin/products/ProductsManagement';
@@ -24,7 +23,6 @@ import CategoryManagement from './components/admin/categories/CategoryManagement
 import CustomizationManagement from './components/admin/customizations/CustomizationManagement';
 import CustomerProfilePage from './components/customer/ProfilePage';
 import ProfilePage from './pages/ProfilePage';
-import { Loading } from './components/Loading';
 import CustomerDashboard from './components/customer/CustomerDashboard';
 import ProductsPage from './components/customer/ProductsPage';
 import CartPage from './components/customer/CartPage';
@@ -98,6 +96,7 @@ const AuthRoutes: React.FC = () => {
   }, [oauthHandled]);
 
   const handleOAuthCallback = async (token: string, provider: string) => {
+    console.log('OAuth callback', token, provider);
     try {
       const authService = getAuthService();
       localStorage.setItem('access_token', token);

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const useTokenExpiration = () => {
     const { checkTokenExpiration, handleTokenExpiration, isAuthenticated } = useAuth();
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         // Only check token expiration if user is authenticated

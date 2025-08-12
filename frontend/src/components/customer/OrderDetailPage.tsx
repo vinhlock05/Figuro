@@ -10,12 +10,8 @@ import {
     AlertCircle,
     Truck,
     ArrowLeft,
-    Calendar,
     DollarSign,
     MapPin,
-    User,
-    Phone,
-    Mail
 } from 'lucide-react';
 
 const OrderDetailPage: React.FC = () => {

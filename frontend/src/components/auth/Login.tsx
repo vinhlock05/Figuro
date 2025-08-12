@@ -48,7 +48,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onForgotPasswo
     const {
         register,
         handleSubmit,
-        formState: { errors, isSubmitting, isValid },
+        formState: { errors, isSubmitting },
     } = useForm<LoginFormData>({
         resolver: yupResolver(loginSchema) as any,
         mode: 'onChange',

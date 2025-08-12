@@ -247,7 +247,7 @@ class CustomerService {
     }
 
     async addToCart(productId: string, quantity: number, customizations?: Array<{ type: string; value: string }>): Promise<Cart> {
-        const response = await axios.post(`${API_BASE_URL}/api/cart/add`, {
+        await axios.post(`${API_BASE_URL}/api/cart/add`, {
             productId: parseInt(productId),
             quantity,
             customizations,
@@ -260,7 +260,7 @@ class CustomerService {
     }
 
     async updateCartItem(itemId: string, quantity: number, customizations?: Array<{ type: string; value: string }>): Promise<Cart> {
-        const response = await axios.put(`${API_BASE_URL}/api/cart/update`, {
+        await axios.put(`${API_BASE_URL}/api/cart/update`, {
             cartItemId: parseInt(itemId),
             quantity,
             customizations,
@@ -273,7 +273,7 @@ class CustomerService {
     }
 
     async removeFromCart(itemId: string): Promise<Cart> {
-        const response = await axios.delete(`${API_BASE_URL}/api/cart/remove`, {
+        await axios.delete(`${API_BASE_URL}/api/cart/remove`, {
             data: { cartItemId: parseInt(itemId) },
             headers: this.getAuthHeaders(),
         });

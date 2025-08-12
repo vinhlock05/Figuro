@@ -98,8 +98,8 @@ const OrdersChart: React.FC<OrdersChartProps> = ({ ordersByStatus }) => {
                         <button
                             onClick={() => setChartType('pie')}
                             className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${chartType === 'pie'
-                                    ? 'bg-white text-gray-900 shadow'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-white text-gray-900 shadow'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                         >
                             <PieChart className="h-4 w-4 inline mr-1" />
@@ -108,8 +108,8 @@ const OrdersChart: React.FC<OrdersChartProps> = ({ ordersByStatus }) => {
                         <button
                             onClick={() => setChartType('bar')}
                             className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${chartType === 'bar'
-                                    ? 'bg-white text-gray-900 shadow'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-white text-gray-900 shadow'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                         >
                             <BarChart className="h-4 w-4 inline mr-1" />
@@ -132,7 +132,7 @@ const OrdersChart: React.FC<OrdersChartProps> = ({ ordersByStatus }) => {
                                             d={slice.path}
                                             fill={slice.color}
                                             className="hover:opacity-80 transition-opacity cursor-pointer"
-                                            title={`${STATUS_LABELS[slice.status]}: ${slice.count}`}
+                                            aria-label={`${STATUS_LABELS[slice.status]}: ${slice.count}`}
                                         />
                                     ))}
                                 </svg>

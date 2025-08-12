@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../../../contexts/AdminContext';
 import {
-    Plus,
-    Edit,
-    Trash2,
-    Search,
-    Package,
-    DollarSign,
-    Hash
+    Plus
 } from 'lucide-react';
 import type { Product, CreateProductData } from '../../../services/adminService';
 import { useLocation } from 'react-router-dom';
@@ -27,7 +21,6 @@ export const ProductsManagement: React.FC = () => {
         updateProduct,
         deleteProduct,
         categories,
-        isLoadingCategories,
         fetchCategories,
     } = useAdmin();
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { customerService } from '../../services/customerService';
-import type { Cart, CartItem } from '../../services/customerService';
+import type { Cart } from '../../services/customerService';
 import ToastMessage, { type ToastType } from '../common/ToastMessage';
 import { useCart } from '../../contexts/CartContext';
 import { formatVND } from '../../utils/currency';
@@ -11,7 +11,6 @@ import {
     Minus,
     ShoppingBag,
     ArrowRight,
-    X
 } from 'lucide-react';
 
 const CartPage: React.FC = () => {

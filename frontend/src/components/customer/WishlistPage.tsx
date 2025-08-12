@@ -8,7 +8,6 @@ import {
     Heart,
     ShoppingCart,
     Trash2,
-    Star,
     Package,
     Settings
 } from 'lucide-react';
@@ -126,12 +125,6 @@ const WishlistPage: React.FC = () => {
 
                     <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center space-x-4">
-                            <div className="flex items-center">
-                                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                <span className="ml-1 text-sm text-gray-500">
-                                    {product.rating ? product.rating.toFixed(1) : '4.5'}
-                                </span>
-                            </div>
                             <p className="text-lg font-medium text-gray-900">
                                 {formatVND(product.price)}
                             </p>

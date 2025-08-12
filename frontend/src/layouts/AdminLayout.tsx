@@ -6,12 +6,8 @@ import {
     Package,
     Users,
     ShoppingCart,
-    Settings,
-    LogOut,
     Menu,
     X,
-    BarChart3,
-    TrendingUp,
     Layers,
     Settings2
 } from 'lucide-react';
@@ -30,14 +26,6 @@ export const AdminLayout: React.FC = () => {
         { name: 'Users', href: '/admin/users', icon: Users },
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     ];
-
-    const handleLogout = async () => {
-        try {
-            await logout();
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
-    };
 
     return (
         <div className="min-h-screen bg-gray-100">

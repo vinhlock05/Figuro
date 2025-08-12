@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
-import { useVoice } from '../contexts/VoiceContext';
 import { customerService } from '../services/customerService';
 import type { Product } from '../services/customerService';
 import { formatVND } from '../utils/currency';
@@ -19,8 +18,7 @@ import {
     Menu,
     X,
     Heart,
-    LogOut,
-    Mic
+    LogOut
 } from 'lucide-react';
 
 interface CustomerLayoutProps {

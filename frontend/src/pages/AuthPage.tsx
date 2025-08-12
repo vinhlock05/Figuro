@@ -11,7 +11,10 @@ export const AuthPage: React.FC = () => {
     return (
         <div>
             {isLogin ? (
-                <Login onSwitchToRegister={switchToRegister} />
+                <Login
+                    onSwitchToRegister={switchToRegister}
+                    onForgotPassword={() => { }}
+                />
             ) : (
                 <Register onSwitchToLogin={switchToLogin} />
             )}

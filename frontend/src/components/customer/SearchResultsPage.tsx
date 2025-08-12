@@ -9,7 +9,6 @@ import {
     Filter,
     Grid,
     List,
-    ShoppingCart,
     Heart,
     X
 } from 'lucide-react';
@@ -104,15 +103,15 @@ const SearchResultsPage: React.FC = () => {
         setSearchParams(params);
     }, [searchQuery, sortBy, priceRange, selectedCategories, setSearchParams]);
 
-    const handleAddToCart = async (productId: string) => {
-        try {
-            await customerService.addToCart(productId, 1);
-            // TODO: Show success notification
-        } catch (error) {
-            console.error('Error adding to cart:', error);
-            // TODO: Show error notification
-        }
-    };
+    // const handleAddToCart = async (productId: string) => {
+    //     try {
+    //         await customerService.addToCart(productId, 1);
+    //         // TODO: Show success notification
+    //     } catch (error) {
+    //         console.error('Error adding to cart:', error);
+    //         // TODO: Show error notification
+    //     }
+    // };
 
     const handleAddToWishlist = async (productId: string) => {
         try {
@@ -198,7 +197,7 @@ const SearchResultsPage: React.FC = () => {
     );
 
     const ProductListItem: React.FC<{ product: Product }> = ({ product }) => (
-        <Link to={`/products/${product.slug}`} className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 block">
+        <Link to={`/products/${product.slug}`} className=" bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 block">
             <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
                 {product.imageUrl ? (
                     <img

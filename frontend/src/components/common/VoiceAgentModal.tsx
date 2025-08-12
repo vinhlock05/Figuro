@@ -3,7 +3,6 @@ import { useVoice } from '../../contexts/VoiceContext';
 import {
     Mic,
     MicOff,
-    Volume2,
     VolumeX,
     Send,
     X,
@@ -31,7 +30,7 @@ const VoiceAgentModal: React.FC = () => {
         startListening,
         stopListening,
         processTextInput,
-        speak,
+        // speak,
         stopSpeaking,
         clearError,
         escalateToHuman
