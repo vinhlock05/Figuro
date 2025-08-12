@@ -144,9 +144,9 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           npm i -g vercel@latest
-          vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
-          vercel build --prod --token "$VERCEL_TOKEN"
-          vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN"
+          vercel pull --yes --environment=development --token "$VERCEL_TOKEN"
+          vercel build --environment=development --token "$VERCEL_TOKEN"
+          vercel deploy --prebuilt --environment=development --token "$VERCEL_TOKEN"
       - name: Trigger backend deploy hook (Render)
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_RENDER_DEPLOY == 'true' }}
         env:
