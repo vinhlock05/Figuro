@@ -131,7 +131,7 @@ jobs:
           docker push $IMAGE_NAME
 
   deploy:
-    name: Deploy (optional)
+    name: Deploy
     needs: [frontend, backend, docker_frontend, api_backend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -144,10 +144,10 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           npm i -g vercel@latest
-          vercel pull --yes --environment=development --token "$VERCEL_TOKEN"
-          vercel build --environment=development --token "$VERCEL_TOKEN"
-          vercel deploy --prebuilt --environment=development --token "$VERCEL_TOKEN"
-      - name: Trigger backend deploy hook (Render)
+          vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
+          vercel build --prod --token "$VERCEL_TOKEN"
+          vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN"
+      - name: Deploy express backend to Render
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_RENDER_DEPLOY == 'true' }}
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
