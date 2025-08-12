@@ -78,3 +78,4 @@ voice-agent/app/static/audio/
 dump.rdb       # Redis dump file
 resend.log     # Resend local log
 sendgrid.log   # SendGrid local log
+.vercel
