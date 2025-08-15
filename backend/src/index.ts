@@ -11,9 +11,11 @@ import compression from 'compression'
 dotenv.config()
 const app = express()
 
+const FRONTEND_URL = process.env.WEB_BASE_URL || 'http://localhost:5173'
+
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:61964', 'http://127.0.0.1:5173', 'http://localhost:5174'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', FRONTEND_URL],
     credentials: true
 }))
 app.use(express.json())

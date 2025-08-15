@@ -138,7 +138,6 @@ jobs:
     steps:
       - name: Deploy frontend to Vercel
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_VERCEL_DEPLOY == 'true' }}
-        working-directory: ./frontend
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -151,7 +150,13 @@ jobs:
       - name: Deploy express backend to Render
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_RENDER_DEPLOY == 'true' }}
         env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          RENDER_DEPLOY_HOOK_API_BACKEND: ${{ secrets.RENDER_DEPLOY_HOOK_API_BACKEND }}
         run: |
-          curl -X POST "$RENDER_DEPLOY_HOOK"
+          curl -X POST "$RENDER_DEPLOY_HOOK_API_BACKEND"
+      - name: Deploy voice agent to Render
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_RENDER_DEPLOY == 'true' }}
+        env:
+          RENDER_DEPLOY_HOOK_VOICE_AGENT: ${{ secrets.RENDER_DEPLOY_HOOK_VOICE_AGENT }}
+        run: |
+          curl -X POST "$RENDER_DEPLOY_HOOK_VOICE_AGENT"
 

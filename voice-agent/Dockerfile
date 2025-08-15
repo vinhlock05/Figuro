@@ -13,6 +13,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     portaudio19-dev \
+    espeak \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
