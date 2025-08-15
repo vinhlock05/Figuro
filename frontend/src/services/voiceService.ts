@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Voice Agent API Configuration
-const VOICE_API_BASE_URL = import.meta.env.AGENT_API_BASE_URL || 'http://localhost:8000';
+const VOICE_API_BASE_URL = import.meta.env.VITE_AGENT_API_BASE_URL || 'http://localhost:8000';
 
 // Types for Voice Agent
 export interface VoiceProcessRequest {
