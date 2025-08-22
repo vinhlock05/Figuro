@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useVoice } from '../../contexts/VoiceContext';
-import {
-    Mic,
-    MessageCircle,
-    Volume2,
-    Loader2,
-    AlertTriangle
-} from 'lucide-react';
+import { Mic, Search, Settings, HelpCircle, MessageCircle, Volume2, Loader2, AlertTriangle } from 'lucide-react';
+import VoiceProductSearch from './VoiceProductSearch';
 
 const VoiceAgentButton: React.FC = () => {
     const {
-        openVoiceModal,
+        isSupported,
         isListening,
         isProcessing,
         isSpeaking,
-        isSupported,
-        error
+        error,
+        startListening,
+        stopListening,
+        openVoiceModal,
+        askProductInfo,
+        getRecommendations,
+        searchProductsByVoice
     } = useVoice();
 
+    const [showQuickActions, setShowQuickActions] = useState(false);
+    const [showVoiceSearch, setShowVoiceSearch] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
 
@@ -36,6 +38,14 @@ const VoiceAgentButton: React.FC = () => {
     const handleTooltipDismiss = () => {
         setShowTooltip(false);
         localStorage.setItem('voiceAgentTooltipSeen', 'true');
+    };
+
+    const handleVoiceToggle = async () => {
+        if (isListening) {
+            stopListening();
+        } else {
+            await startListening();
+        }
     };
 
     const getButtonState = () => {
@@ -82,20 +92,43 @@ const VoiceAgentButton: React.FC = () => {
         const state = getButtonState();
         switch (state) {
             case 'error':
-                return 'Có lỗi xảy ra - Nhấn để thử lại';
+                return 'Có lỗi xảy ra - Click để thử lại';
             case 'listening':
-                return 'Đang nghe...';
+                return 'Đang lắng nghe...';
             case 'processing':
                 return 'Đang xử lý...';
             case 'speaking':
                 return 'Đang trả lời...';
             default:
-                return 'Trợ lý ảo Figuro - Nhấn để bắt đầu';
+                return 'Figuro AI Assistant - Click để bắt đầu';
         }
     };
 
+    const quickActions = [
+        {
+            label: '🔍 Tìm sản phẩm',
+            action: () => setShowVoiceSearch(true),
+            icon: Search
+        },
+        {
+            label: '💡 Tư vấn mua hàng',
+            action: () => askProductInfo('figure anime'),
+            icon: HelpCircle
+        },
+        {
+            label: '📂 Gợi ý sản phẩm',
+            action: () => getRecommendations(),
+            icon: Settings
+        },
+        {
+            label: '🎭 Naruto figures',
+            action: () => searchProductsByVoice('Naruto figures', 'Naruto'),
+            icon: Mic
+        }
+    ];
+
     if (!isSupported) {
-        return null; // Don't show button if voice features aren't supported
+        return null;
     }
 
     return (
@@ -105,23 +138,18 @@ const VoiceAgentButton: React.FC = () => {
                 <div className="relative">
                     {/* Tooltip */}
                     {(isHovered || showTooltip) && (
-                        <div className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap transform transition-all duration-200">
-                            {showTooltip ? 'Thử trợ lý ảo của chúng tôi!' : getTooltipText()}
-                            <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                            {showTooltip && (
-                                <button
-                                    onClick={handleTooltipDismiss}
-                                    className="ml-2 text-gray-300 hover:text-white"
-                                >
-                                    ×
-                                </button>
-                            )}
+                        <div className="absolute bottom-full mb-3 right-0 bg-neutral-900 text-white text-xs px-3 py-2 rounded-md whitespace-nowrap shadow-lg">
+                            <div className="flex items-center space-x-2">
+                                <MessageCircle className="h-4 w-4" />
+                                <span>{getTooltipText()}</span>
+                                <button onClick={handleTooltipDismiss} className="ml-1 text-white/70 hover:text-white">×</button>
+                            </div>
                         </div>
                     )}
 
                     {/* Activity indicator ring */}
                     {(isListening || isProcessing || isSpeaking) && (
-                        <div className="absolute inset-0 rounded-full border-4 border-white animate-ping"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-white/30 animate-ping"></div>
                     )}
 
                     {/* Main button */}
@@ -130,44 +158,103 @@ const VoiceAgentButton: React.FC = () => {
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                         className={`
-                            relative w-14 h-14 rounded-full text-white shadow-lg 
-                            transform transition-all duration-200 hover:scale-110 
+                            relative w-14 h-14 rounded-full text-white shadow-xl
+                            flex items-center justify-center
+                            transition-transform duration-200 hover:scale-110
                             ${getButtonColor()}
-                            ${showTooltip ? 'animate-bounce' : ''}
+                            border border-white/30
                         `}
-                        aria-label="Mở trợ lý ảo"
+                        aria-label="Open AI Assistant"
                     >
-                        {getButtonIcon()}
-
-                        {/* Pulse effect for idle state */}
-                        {getButtonState() === 'idle' && (
-                            <div className="absolute inset-0 rounded-full bg-indigo-400 animate-ping opacity-75"></div>
-                        )}
+                        <div className="flex items-center justify-center w-full h-full">
+                            {getButtonIcon()}
+                        </div>
                     </button>
 
                     {/* Status indicator */}
                     <div className={`
-                        absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white
-                        ${error ? 'bg-red-500' :
-                            isListening ? 'bg-green-500' :
-                                isProcessing ? 'bg-yellow-500' :
-                                    isSpeaking ? 'bg-blue-500' :
-                                        'bg-gray-400'}
-                    `}>
-                    </div>
+                        absolute -top-2 -right-2 w-4 h-4 rounded-full border-2 border-white/60 shadow
+                        ${error ? 'bg-danger' :
+                            isListening ? 'bg-success' :
+                                isProcessing ? 'bg-accent' :
+                                    isSpeaking ? 'bg-brand' :
+                                        'bg-neutral-200'}
+                    `} />
+
+                    {/* Quick Actions Menu */}
+                    <button
+                        onClick={() => setShowQuickActions(!showQuickActions)}
+                        className="absolute -top-2 -left-2 p-1 bg-neutral-200 dark:bg-neutral-700 rounded-full hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
+                        title="Hành động nhanh"
+                    >
+                        <Settings className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
+                    </button>
+
+                    {/* Quick Actions Dropdown */}
+                    {showQuickActions && (
+                        <div className="absolute bottom-full left-0 mb-2 w-64 bg-white dark:bg-neutral-800 rounded-xl shadow-xl border-2 border-neutral-200 dark:border-neutral-600 p-2 z-50">
+                            <div className="space-y-1">
+                                {quickActions.map((action, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => {
+                                            action.action();
+                                            setShowQuickActions(false);
+                                        }}
+                                        className="w-full flex items-center space-x-3 p-3 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+                                    >
+                                        <action.icon className="h-4 w-4" />
+                                        <span>{action.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Divider */}
+                            <div className="border-t border-neutral-200 dark:border-neutral-600 my-2"></div>
+
+                            {/* Voice Toggle */}
+                            <button
+                                onClick={() => {
+                                    handleVoiceToggle();
+                                    setShowQuickActions(false);
+                                }}
+                                className="w-full flex items-center space-x-3 p-3 text-left text-sm text-brand hover:bg-brand/10 rounded-lg transition-colors"
+                            >
+                                <Mic className="h-4 w-4" />
+                                <span>{isListening ? 'Dừng ghi âm' : 'Bắt đầu ghi âm'}</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Keyboard shortcut hint */}
-            <div className="fixed bottom-6 right-24 z-30">
+            <div className="fixed bottom-6 right-28 z-30">
                 <div className={`
-                    bg-gray-800 text-white text-xs px-2 py-1 rounded 
-                    transition-opacity duration-300
-                    ${isHovered ? 'opacity-100' : 'opacity-0'}
+                    bg-gradient-to-r from-gray-800 to-gray-900 text-white text-xs px-3 py-2 rounded-xl 
+                    transition-all duration-300 border border-white/10 shadow-lg
+                    ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
                 `}>
-                    Phím tắt: Ctrl + /
+                    <div className="flex items-center space-x-2">
+                        <span className="text-purple-300">⌨</span>
+                        <span>Ctrl + /</span>
+                    </div>
                 </div>
             </div>
+
+            {/* Voice Product Search Modal */}
+            <VoiceProductSearch
+                isOpen={showVoiceSearch}
+                onClose={() => setShowVoiceSearch(false)}
+            />
+
+            {/* Click outside to close quick actions */}
+            {showQuickActions && (
+                <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowQuickActions(false)}
+                />
+            )}
         </>
     );
 };

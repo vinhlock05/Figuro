@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Sparkles, User, Shield, ArrowLeft, Clock } from 'lucide-react';
 import { OAuthButtons } from './OAuthButtons';
 
 const loginSchema = yup.object({
@@ -31,6 +32,7 @@ interface LoginProps {
 
 export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onForgotPassword }) => {
     const { login } = useAuth();
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string>('');
     const [showExpiredMessage, setShowExpiredMessage] = useState(false);
@@ -61,6 +63,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onForgotPasswo
             console.log('Calling login function...');
             await login(data.email, data.password, data.rememberMe);
             console.log('Login successful!');
+            navigate('/');
         } catch (err: any) {
             console.error('Login error:', err);
             setError(err.response?.data?.message || 'Login failed. Please try again.');
@@ -72,160 +75,162 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onForgotPasswo
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-6">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Đăng nhập vào tài khoản
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Hoặc{' '}
-                        <button
-                            onClick={onSwitchToRegister}
-                            className="font-medium text-indigo-600 hover:text-indigo-500"
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-lg w-full animate-fade-in">
+                {/* Auth card */}
+                <div className="card p-8 border-2 border-neutral-100 dark:border-neutral-700 shadow-soft relative">
+                    <div className="absolute inset-x-0 -top-0.5 h-1 bg-brand/70 rounded-t-xl" />
+                    {/* Header */}
+                    <div className="text-center mb-8 relative">
+                        {/* Back to Home Button - Top Left */}
+                        <Link
+                            to="/"
+                            className="absolute -top-2 -left-2 flex items-center space-x-2 px-3 py-2 text-neutral-700 hover:text-brand dark:text-neutral-100 transition-all duration-300 group"
                         >
-                            tạo tài khoản mới
-                        </button>
-                    </p>
-                </div>
+                            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" />
+                            <span className="font-medium text-sm">Back to Home</span>
+                        </Link>
 
-                {/* Token Expiration Message */}
-                {showExpiredMessage && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-yellow-800">
-                                    Phiên đăng nhập đã hết hạn
-                                </h3>
-                                <div className="mt-2 text-sm text-yellow-700">
-                                    <p>
-                                        Để bảo mật tài khoản, vui lòng đăng nhập lại để tiếp tục sử dụng hệ thống.
-                                    </p>
-                                </div>
-                            </div>
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-brand/10 text-brand ring-1 ring-brand/20 animate-bounce-gentle">
+                            <Sparkles className="h-7 w-7" />
                         </div>
-                    </div>
-                )}
-
-                <form
-                    className="space-y-4"
-                    onSubmit={handleSubmit(onSubmit)}
-                >
-                    <div className="space-y-4">
-                        <div>
-                            <label htmlFor="email" className="sr-only">
-                                Địa chỉ email
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    {...register('email')}
-                                    id="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                    placeholder="Địa chỉ email"
-                                />
-                            </div>
-                            {errors.email && (
-                                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label htmlFor="password" className="sr-only">
-                                Mật khẩu
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    {...register('password')}
-                                    id="password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    autoComplete="current-password"
-                                    className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="Mật khẩu"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center z-10 hover:text-gray-600 focus:outline-none focus:text-gray-600"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="h-5 w-5 text-gray-400" />
-                                    ) : (
-                                        <Eye className="h-5 w-5 text-gray-400" />
-                                    )}
-                                </button>
-                            </div>
-                            {errors.password && (
-                                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-                            )}
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    {...register('rememberMe')}
-                                    id="rememberMe"
-                                    type="checkbox"
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
-                                    Ghi nhớ đăng nhập
-                                </label>
-                            </div>
-
-                            <div className="text-sm">
-                                <button
-                                    type="button"
-                                    onClick={onForgotPassword}
-                                    className="font-medium text-indigo-600 hover:text-indigo-500"
-                                >
-                                    Quên mật khẩu?
-                                </button>
-                            </div>
-                        </div>
+                        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+                            Welcome Back
+                        </h2>
+                        <p className="text-neutral-500 dark:text-neutral-200">
+                            Or{' '}
+                            <button
+                                onClick={onSwitchToRegister}
+                                className="font-medium text-brand hover:underline"
+                            >
+                                create a new account
+                            </button>
+                        </p>
                     </div>
 
-                    {error && (
-                        <div className="rounded-md bg-red-50 p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                                </div>
-                            </div>
+                    {/* Token Expiration Message */}
+                    {showExpiredMessage && (
+                        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 mb-6 text-yellow-800 animate-slide-up">
+                            Session expired. Please sign in again.
                         </div>
                     )}
 
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? (
-                                <div className="flex items-center">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Đang đăng nhập...
+                    <form
+                        className="space-y-6"
+                        onSubmit={handleSubmit(onSubmit)}
+                    >
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="email" className="sr-only">
+                                    Email Address
+                                </label>
+                                <div className="relative max-w-full">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Mail className="h-5 w-5 text-brand" />
+                                    </div>
+                                    <input
+                                        {...register('email')}
+                                        id="email"
+                                        type="email"
+                                        autoComplete="email"
+                                        className="input-primary w-full pl-12 transition-smooth border-2 border-neutral-300 dark:border-neutral-700 h-12 rounded-xl text-base"
+                                        placeholder="Email Address"
+                                    />
                                 </div>
-                            ) : (
-                                'Đăng nhập'
-                            )}
-                        </button>
-                    </div>
-                </form>
+                                {errors.email && (
+                                    <p className="mt-2 text-sm text-danger animate-slide-up">{errors.email.message}</p>
+                                )}
+                            </div>
 
-                <OAuthButtons onError={handleOAuthError} />
+                            <div>
+                                <label htmlFor="password" className="sr-only">
+                                    Password
+                                </label>
+                                <div className="relative w-full">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Lock className="h-5 w-5 text-brand" />
+                                    </div>
+                                    <input
+                                        {...register('password')}
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        autoComplete="current-password"
+                                        className="input-primary w-full pl-12 pr-12 transition-smooth border-2 border-neutral-300 dark:border-neutral-700 h-12 rounded-xl text-base"
+                                        placeholder="Password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center z-10 text-neutral-500 hover:text-neutral-700 dark:text-neutral-300 dark:hover:text-neutral-100"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
+                                </div>
+                                {errors.password && (
+                                    <p className="mt-2 text-sm text-danger animate-slide-up">{errors.password.message}</p>
+                                )}
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <input
+                                        {...register('rememberMe')}
+                                        id="rememberMe"
+                                        type="checkbox"
+                                        className="h-4 w-4 text-brand focus:ring-brand border-neutral-300 rounded"
+                                    />
+                                    <label htmlFor="rememberMe" className="ml-2 block text-sm text-neutral-700 dark:text-neutral-200">
+                                        Remember me
+                                    </label>
+                                </div>
+
+                                <div className="text-sm">
+                                    <button
+                                        type="button"
+                                        onClick={onForgotPassword}
+                                        className="font-medium text-brand hover:underline"
+                                    >
+                                        Forgot password?
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="rounded-2xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger animate-slide-up">
+                                {error}
+                            </div>
+                        )}
+
+                        <div>
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="btn-primary w-full hover-lift border-2 border-brand/60 h-12 rounded-xl text-base"
+                            >
+                                {isSubmitting ? (
+                                    <div className="flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Signing in...
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center">
+                                        <User className="h-4 w-4 mr-2" />
+                                        Sign In
+                                    </div>
+                                )}
+                            </button>
+                        </div>
+                    </form>
+
+                    <div className="mt-6 animate-fade-in">
+                        <OAuthButtons onError={handleOAuthError} />
+                    </div>
+                </div>
             </div>
         </div>
     );

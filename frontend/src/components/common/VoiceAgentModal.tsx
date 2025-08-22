@@ -30,9 +30,10 @@ const VoiceAgentModal: React.FC = () => {
         startListening,
         stopListening,
         processTextInput,
-        // speak,
         stopSpeaking,
         clearError,
+        searchProductsByVoice,
+        getProductCategories,
         escalateToHuman
     } = useVoice();
 
@@ -42,6 +43,7 @@ const VoiceAgentModal: React.FC = () => {
         type: 'user' | 'agent';
         text: string;
         timestamp: Date;
+        products?: any[];
     }>>([]);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -66,16 +68,21 @@ const VoiceAgentModal: React.FC = () => {
         }
     }, [currentTranscript]);
 
+    // Add messages to conversation history with product recommendations
     useEffect(() => {
         if (lastResponse?.response_text) {
-            setConversationHistory(prev => [
-                ...prev,
-                {
-                    type: 'agent',
-                    text: lastResponse.response_text,
-                    timestamp: new Date()
-                }
-            ]);
+            const messageData: any = {
+                type: 'agent',
+                text: lastResponse.response_text,
+                timestamp: new Date()
+            };
+
+            // Add product recommendations if available
+            if (lastResponse.product_recommendations && lastResponse.product_recommendations.length > 0) {
+                messageData.products = lastResponse.product_recommendations;
+            }
+
+            setConversationHistory(prev => [...prev, messageData]);
         }
     }, [lastResponse]);
 
@@ -98,91 +105,80 @@ const VoiceAgentModal: React.FC = () => {
         }
     }, [isVoiceModalOpen]);
 
-    // Persist conversation
+    // Persist conversation to localStorage
     useEffect(() => {
-        const toSave = conversationHistory.map(m => ({ ...m, timestamp: m.timestamp.toISOString() }));
-        localStorage.setItem('voiceAgentConversation', JSON.stringify(toSave));
+        if (conversationHistory.length > 0) {
+            localStorage.setItem('voiceAgentConversation', JSON.stringify(conversationHistory));
+        }
     }, [conversationHistory]);
 
-    // Handle ESC key to close modal
-    useEffect(() => {
-        const handleEscKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && isVoiceModalOpen) {
-                closeVoiceModal();
-            }
-        };
-
-        if (isVoiceModalOpen) {
-            document.addEventListener('keydown', handleEscKey);
-            return () => document.removeEventListener('keydown', handleEscKey);
-        }
-    }, [isVoiceModalOpen, closeVoiceModal]);
-
-    const handleTextSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (textInput.trim()) {
-            await processTextInput(textInput.trim());
-            setTextInput('');
-        }
-    };
-
-    const handleVoiceToggle = async () => {
+    const handleVoiceToggle = () => {
         if (isListening) {
             stopListening();
         } else {
-            await startListening();
+            startListening();
+        }
+    };
+
+    const handleTextSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (textInput.trim()) {
+            processTextInput(textInput.trim());
+            setTextInput('');
         }
     };
 
     const handleLanguageChange = (newLanguage: string) => {
         setLanguage(newLanguage);
-        setShowSettings(false);
     };
 
     const quickActions = [
         {
-            label: 'Tìm sản phẩm',
-            action: () => processTextInput('Tôi muốn tìm sản phẩm mô hình figure')
+            label: '🔍 Tìm sản phẩm',
+            action: () => processTextInput('Tôi muốn tìm sản phẩm figure')
         },
         {
-            label: 'Kiểm tra đơn hàng',
-            action: () => processTextInput('Kiểm tra trạng thái đơn hàng của tôi')
+            label: '📦 Kiểm tra đơn hàng',
+            action: () => processTextInput('Tôi muốn kiểm tra đơn hàng của mình')
         },
         {
-            label: 'Gợi ý sản phẩm',
-            action: () => processTextInput('Gợi ý cho tôi một số sản phẩm hay')
+            label: '💡 Tư vấn mua hàng',
+            action: () => processTextInput('Tôi cần tư vấn về việc mua figure')
         },
         {
-            label: 'Hỗ trợ tùy chỉnh',
-            action: () => processTextInput('Tôi cần hỗ trợ tùy chỉnh sản phẩm')
+            label: '📂 Xem danh mục',
+            action: () => getProductCategories()
+        },
+        {
+            label: '💰 Sản phẩm giá rẻ',
+            action: () => searchProductsByVoice('sản phẩm giá rẻ', undefined, 'low')
+        },
+        {
+            label: '🎭 Naruto figures',
+            action: () => searchProductsByVoice('Naruto figures', 'Naruto')
         }
     ];
 
     if (!isVoiceModalOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 pointer-events-none">
-            {/* Backdrop only for the panel area when open on mobile */}
-            <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-            {/* Messenger-like floating panel */}
-            <div className="pointer-events-auto fixed bottom-6 right-6 w-full sm:w-96 max-w-[95vw] shadow-2xl">
-                <div
-                    className="bg-white rounded-2xl overflow-hidden border border-gray-200 flex flex-col max-h-[70vh]"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div
-                        className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b">
-                            <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                                    <MessageCircle className="w-4 h-4 text-white" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={closeVoiceModal} />
+            <div className="relative w-full max-w-2xl animate-fade-in">
+                <div className="card border-2 border-neutral-100 dark:border-neutral-700 shadow-3xl bg-white dark:bg-neutral-800 rounded-2xl overflow-hidden">
+                    {/* Header */}
+                    <div className="relative p-6 border-b-2 border-neutral-100 dark:border-neutral-700 bg-gradient-to-r from-brand/5 to-accent/5">
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-brand/10 rounded-xl">
+                                    <MessageCircle className="h-6 w-6 text-brand" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-semibold">Trợ lý ảo Figuro</h3>
-                                    <p className="text-xs text-gray-500">
+                                    <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+                                        Trợ lý ảo Figuro
+                                    </h2>
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-300">
                                         {isListening ? 'Đang nghe...' :
                                             isProcessing ? 'Đang xử lý...' :
                                                 isSpeaking ? 'Đang nói...' : 'Sẵn sàng hỗ trợ'}
@@ -192,184 +188,218 @@ const VoiceAgentModal: React.FC = () => {
                             <div className="flex items-center space-x-2">
                                 <button
                                     onClick={() => setShowSettings(!showSettings)}
-                                    className="p-1 text-gray-400 hover:text-gray-600"
+                                    className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-xl transition-all duration-200"
                                 >
-                                    <Settings className="w-4 h-4" />
+                                    <Settings className="h-4 w-4" />
                                 </button>
                                 <button
                                     onClick={closeVoiceModal}
-                                    className="p-1 text-gray-400 hover:text-gray-600"
+                                    className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-xl transition-all duration-200"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Settings Panel */}
-                        {showSettings && (
-                            <div className="p-4 bg-gray-50 border-b">
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Ngôn ngữ
-                                        </label>
-                                        <select
-                                            value={language}
-                                            onChange={(e) => handleLanguageChange(e.target.value)}
-                                            className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                                        >
-                                            <option value="vi-VN">Tiếng Việt</option>
-                                            <option value="en-US">English</option>
-                                            <option value="ja-JP">日本語</option>
-                                        </select>
+                    {/* Settings Panel */}
+                    {showSettings && (
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-700/50 border-b-2 border-neutral-100 dark:border-neutral-700">
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                        Ngôn ngữ
+                                    </label>
+                                    <select
+                                        value={language}
+                                        onChange={(e) => handleLanguageChange(e.target.value)}
+                                        className="w-full p-3 border-2 border-neutral-300 dark:border-neutral-600 rounded-xl text-sm bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 focus:border-brand focus:ring-brand"
+                                    >
+                                        <option value="vi-VN">Tiếng Việt</option>
+                                        <option value="en-US">English</option>
+                                        <option value="ja-JP">日本語</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white dark:bg-neutral-800 max-h-96">
+
+                        {/* Messages with Product Recommendations */}
+                        {conversationHistory.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div
+                                    className={`max-w-[80%] p-4 rounded-2xl border-2 ${message.type === 'user'
+                                        ? 'border-brand/20 bg-brand/10 text-neutral-900 dark:text-neutral-100'
+                                        : 'border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100'
+                                        }`}
+                                >
+                                    <p className="text-sm">{message.text}</p>
+
+                                    {/* Product Recommendations */}
+                                    {message.products && message.products.length > 0 && (
+                                        <div className="mt-3 space-y-2">
+                                            <p className="text-xs font-medium text-brand">🎯 Sản phẩm gợi ý:</p>
+                                            {message.products.slice(0, 3).map((product, pIndex) => (
+                                                <div key={pIndex} className="p-2 bg-white dark:bg-neutral-600 rounded-lg border border-neutral-200 dark:border-neutral-500">
+                                                    <p className="text-xs font-medium">{product.name}</p>
+                                                    <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                                                        {product.category?.name} - {product.price?.toLocaleString('vi-VN')} VND
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-brand/60' : 'text-neutral-500 dark:text-neutral-400'
+                                        }`}>
+                                        {message.timestamp.toLocaleTimeString('vi-VN', {
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Loading indicator */}
+                        {(isProcessing || isSpeaking) && (
+                            <div className="flex justify-start">
+                                <div className="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-2xl border-2 border-neutral-200 dark:border-neutral-600">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="animate-spin-slow">
+                                            <Loader2 className="h-4 w-4 text-brand" />
+                                        </div>
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-300">
+                                            {isProcessing ? 'Đang suy nghĩ...' : 'Đang trả lời...'}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white">
-                            {conversationHistory.map((message, index) => (
-                                <div
-                                    key={index}
-                                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                                >
-                                    <div
-                                        className={`max-w-[80%] p-3 rounded-lg ${message.type === 'user'
-                                            ? 'bg-indigo-500 text-white'
-                                            : 'bg-gray-100 text-gray-900'
-                                            }`}
+                        {/* Error message */}
+                        {error && (
+                            <div className="flex justify-center">
+                                <div className="bg-danger/10 border-2 border-danger/20 p-4 rounded-2xl flex items-center space-x-2">
+                                    <AlertCircle className="h-4 w-4 text-danger" />
+                                    <span className="text-sm text-danger">{error}</span>
+                                    <button
+                                        onClick={clearError}
+                                        className="text-danger hover:text-danger-dark"
                                     >
-                                        <p className="text-sm">{message.text}</p>
-                                        <p className={`text-xs mt-1 ${message.type === 'user' ? 'text-indigo-100' : 'text-gray-500'
-                                            }`}>
-                                            {message.timestamp.toLocaleTimeString('vi-VN', {
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                        </p>
-                                    </div>
+                                        <X className="h-3 w-3" />
+                                    </button>
                                 </div>
-                            ))}
+                            </div>
+                        )}
 
-                            {/* Loading indicator */}
-                            {(isProcessing || isSpeaking) && (
-                                <div className="flex justify-start">
-                                    <div className="bg-gray-100 p-3 rounded-lg">
-                                        <div className="flex items-center space-x-2">
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            <span className="text-sm text-gray-600">
-                                                {isProcessing ? 'Đang suy nghĩ...' : 'Đang trả lời...'}
-                                            </span>
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Quick Actions */}
+                    {conversationHistory.length <= 1 && (
+                        <div className="p-4 border-t-2 border-neutral-100 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-700/50">
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">Gợi ý nhanh:</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                {quickActions.map((action, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={action.action}
+                                        className="p-3 text-sm bg-white dark:bg-neutral-700 border-2 border-neutral-200 dark:border-neutral-600 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-600 text-left text-neutral-700 dark:text-neutral-200 transition-all duration-200 hover:border-brand/30"
+                                        disabled={isProcessing || isListening}
+                                    >
+                                        {action.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Input Area */}
+                    <div className="p-4 border-t-2 border-neutral-100 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-700/50">
+                        <form onSubmit={handleTextSubmit} className="flex items-center space-x-3">
+                            <div className="flex-1 relative">
+                                <input
+                                    ref={textInputRef}
+                                    type="text"
+                                    value={textInput}
+                                    onChange={(e) => setTextInput(e.target.value)}
+                                    placeholder="Nhập tin nhắn hoặc nói..."
+                                    className="w-full p-3 pr-12 border-2 border-neutral-300 dark:border-neutral-600 rounded-xl focus:ring-brand focus:border-brand bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                                    disabled={isProcessing || isListening}
+                                />
+                                {textInput && (
+                                    <button
+                                        type="submit"
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-brand hover:text-brand-dark"
+                                        disabled={isProcessing || isListening}
+                                    >
+                                        <Send className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Voice controls */}
+                            <div className="flex space-x-2">
+                                {isSupported ? (
+                                    <button
+                                        type="button"
+                                        onClick={handleVoiceToggle}
+                                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${isListening
+                                            ? 'border-danger bg-danger text-white hover:bg-danger-dark'
+                                            : 'border-brand bg-brand text-white hover:bg-brand-dark'
+                                            }`}
+                                        disabled={isProcessing}
+                                    >
+                                        {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            type="button"
+                                            disabled
+                                            className="p-3 rounded-xl border-2 border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                                            title="Voice không được hỗ trợ trong browser này"
+                                        >
+                                            <Mic className="h-4 w-4" />
+                                        </button>
+                                        <div className="text-xs text-neutral-500 dark:text-neutral-400 max-w-48">
+                                            Voice input không khả dụng. Hãy sử dụng text input hoặc thử browser khác (Chrome/Edge).
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Error message */}
-                            {error && (
-                                <div className="flex justify-center">
-                                    <div className="bg-red-50 border border-red-200 p-3 rounded-lg flex items-center space-x-2">
-                                        <AlertCircle className="w-4 h-4 text-red-500" />
-                                        <span className="text-sm text-red-700">{error}</span>
-                                        <button
-                                            onClick={clearError}
-                                            className="text-red-500 hover:text-red-700"
-                                        >
-                                            <X className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Quick Actions */}
-                        {conversationHistory.length <= 1 && (
-                            <div className="p-4 border-t bg-gray-50">
-                                <p className="text-sm text-gray-600 mb-2">Gợi ý nhanh:</p>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {quickActions.map((action, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={action.action}
-                                            className="p-2 text-xs bg-white border border-gray-200 rounded-md hover:bg-gray-50 text-left"
-                                            disabled={isProcessing || isListening}
-                                        >
-                                            {action.label}
-                                        </button>
-                                    ))}
-                                </div>
+                                {isSpeaking && (
+                                    <button
+                                        type="button"
+                                        onClick={stopSpeaking}
+                                        className="p-3 bg-neutral-500 text-white rounded-xl border-2 border-neutral-500 hover:bg-neutral-600 transition-colors duration-200"
+                                    >
+                                        <VolumeX className="h-4 w-4" />
+                                    </button>
+                                )}
                             </div>
-                        )}
+                        </form>
 
-                        {/* Input Area */}
-                        <div className="p-3 border-t bg-gray-50">
-                            <form onSubmit={handleTextSubmit} className="flex items-center space-x-2">
-                                <div className="flex-1 relative">
-                                    <input
-                                        ref={textInputRef}
-                                        type="text"
-                                        value={textInput}
-                                        onChange={(e) => setTextInput(e.target.value)}
-                                        placeholder="Nhập tin nhắn hoặc nói..."
-                                        className="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                        disabled={isProcessing || isListening}
-                                    />
-                                    {textInput && (
-                                        <button
-                                            type="submit"
-                                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-500 hover:text-indigo-700"
-                                            disabled={isProcessing || isListening}
-                                        >
-                                            <Send className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
+                        {/* Bottom actions */}
+                        <div className="flex justify-between items-center mt-4 pt-4 border-t-2 border-neutral-200 dark:border-neutral-600">
+                            <button
+                                onClick={escalateToHuman}
+                                className="flex items-center space-x-2 text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors duration-200"
+                            >
+                                <Phone className="h-4 w-4" />
+                                <span>Chuyển sang tư vấn viên</span>
+                            </button>
 
-                                {/* Voice controls */}
-                                <div className="flex space-x-1">
-                                    {isSupported && (
-                                        <button
-                                            type="button"
-                                            onClick={handleVoiceToggle}
-                                            className={`p-2 rounded-md ${isListening
-                                                ? 'bg-red-500 text-white'
-                                                : 'bg-indigo-500 text-white hover:bg-indigo-600'
-                                                }`}
-                                            disabled={isProcessing}
-                                        >
-                                            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                                        </button>
-                                    )}
-
-                                    {isSpeaking && (
-                                        <button
-                                            type="button"
-                                            onClick={stopSpeaking}
-                                            className="p-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                                        >
-                                            <VolumeX className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
-                            </form>
-
-                            {/* Bottom actions */}
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                                <button
-                                    onClick={escalateToHuman}
-                                    className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700"
-                                >
-                                    <Phone className="w-3 h-3" />
-                                    <span>Chuyển sang tư vấn viên</span>
-                                </button>
-
-                                <div className="flex items-center space-x-1 text-xs text-gray-400">
-                                    <HelpCircle className="w-3 h-3" />
-                                    <span>AI Assistant</span>
-                                </div>
+                            <div className="flex items-center space-x-2 text-xs text-neutral-400 dark:text-neutral-500">
+                                <HelpCircle className="h-3 w-3" />
+                                <span>AI Assistant</span>
                             </div>
                         </div>
                     </div>

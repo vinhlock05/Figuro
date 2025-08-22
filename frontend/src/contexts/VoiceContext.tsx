@@ -32,6 +32,9 @@ interface VoiceContextType {
     askProductInfo: (productName: string) => Promise<void>;
     checkOrderStatus: (orderId?: string) => Promise<void>;
     getRecommendations: (category?: string) => Promise<void>;
+    searchProductsByVoice: (query: string, category?: string, priceRange?: string) => Promise<void>;
+    getProductCategories: () => Promise<void>;
+    queryChatbot: (text: string) => Promise<void>;
     escalateToHuman: () => void;
 }
 
@@ -72,7 +75,27 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        setIsSupported(voiceService.isVoiceSupported());
+        const checkVoiceSupport = async () => {
+            try {
+                // Check if voice is supported
+                const supported = voiceService.isVoiceSupported();
+                setIsSupported(supported);
+
+                if (supported) {
+                    // Additional check for microphone permissions
+                    const hasPermission = await voiceService.checkMicrophonePermission();
+                    if (!hasPermission) {
+                        console.warn('Microphone permission not granted');
+                        // Still show as supported but with limited functionality
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking voice support:', error);
+                setIsSupported(false);
+            }
+        };
+
+        checkVoiceSupport();
     }, []);
 
     useEffect(() => {
@@ -248,11 +271,17 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
                 (error) => {
                     setError(error);
                     setIsListening(false);
+
+                    // If microphone permission denied, show helpful message
+                    if (error.includes('cấp quyền microphone')) {
+                        setError('Để sử dụng voice input, hãy: 1) Click vào icon microphone trên thanh địa chỉ 2) Chọn "Allow" 3) Refresh trang');
+                    }
                 },
                 language
             );
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to start listening');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to start listening';
+            setError(errorMessage);
             setIsListening(false);
         }
     }, [language, processTextInput]);
@@ -294,6 +323,55 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         await processTextInput(query);
     }, [processTextInput]);
 
+    const searchProductsByVoice = useCallback(async (query: string, category?: string, priceRange?: string) => {
+        try {
+            const searchResult = await voiceService.searchProductsByVoice(query, category, priceRange);
+            if (searchResult.products && searchResult.products.length > 0) {
+                // Navigate to search results or first product
+                window.location.href = `/products?search=${encodeURIComponent(query)}`;
+            } else {
+                await processTextInput(`Tìm kiếm sản phẩm: ${query}`);
+            }
+        } catch (error) {
+            console.error('Voice product search failed:', error);
+            await processTextInput(`Tìm kiếm sản phẩm: ${query}`);
+        }
+    }, [processTextInput]);
+
+    const getProductCategories = useCallback(async () => {
+        try {
+            const categories = await voiceService.getProductCategories();
+            if (categories.length > 0) {
+                const categoryNames = categories.map(cat => cat.name).join(', ');
+                await processTextInput(`Các danh mục sản phẩm: ${categoryNames}`);
+            } else {
+                await processTextInput('Xem tất cả danh mục sản phẩm');
+            }
+        } catch (error) {
+            console.error('Failed to get product categories:', error);
+            await processTextInput('Xem tất cả danh mục sản phẩm');
+        }
+    }, [processTextInput]);
+
+    const queryChatbot = useCallback(async (text: string) => {
+        try {
+            const chatbotResponse = await voiceService.queryChatbot(text, language);
+            if (chatbotResponse.response) {
+                setLastResponse({
+                    transcript: text,
+                    intent: 'get_product_info',
+                    entities: [],
+                    confidence: 0.9,
+                    response_text: chatbotResponse.response.response || 'Tôi đã nhận được câu hỏi của bạn.',
+                    processing_time_ms: 100
+                });
+            }
+        } catch (error) {
+            console.error('Chatbot query failed:', error);
+            await processTextInput(text);
+        }
+    }, [language, processTextInput]);
+
     const escalateToHuman = useCallback(() => {
         // Navigate to contact/support page
         window.location.href = '/contact';
@@ -327,6 +405,9 @@ export const VoiceProvider: React.FC<VoiceProviderProps> = ({ children }) => {
         askProductInfo,
         checkOrderStatus,
         getRecommendations,
+        searchProductsByVoice,
+        getProductCategories,
+        queryChatbot,
         escalateToHuman
     };
 

@@ -5,6 +5,7 @@ import { AdminProvider } from './contexts/AdminContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { CartProvider } from './contexts/CartContext';
 import { VoiceProvider } from './contexts/VoiceContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { useTokenExpiration } from './hooks/useTokenExpiration';
 import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
@@ -21,19 +22,22 @@ import { getAuthService } from './services';
 import AdminDashboard from './components/admin/dashboard/AdminDashboard';
 import CategoryManagement from './components/admin/categories/CategoryManagement';
 import CustomizationManagement from './components/admin/customizations/CustomizationManagement';
-import CustomerProfilePage from './components/customer/ProfilePage';
 import ProfilePage from './pages/ProfilePage';
-import CustomerDashboard from './components/customer/CustomerDashboard';
-import ProductsPage from './components/customer/ProductsPage';
-import CartPage from './components/customer/CartPage';
-import CheckoutPage from './components/customer/CheckoutPage';
-import OrdersPage from './components/customer/OrdersPage';
-import SearchResultsPage from './components/customer/SearchResultsPage';
-import WishlistPage from './components/customer/WishlistPage';
-import NotificationsPage from './components/customer/NotificationsPage';
-import ProductDetailPage from './components/customer/ProductDetailPage';
-import OrderDetailPage from './components/customer/OrderDetailPage';
-import CheckoutResult from './components/customer/CheckoutResult';
+import {
+  CustomerDashboard,
+  ProductsPage,
+  CartPage,
+  CheckoutPage,
+  OrdersPage,
+  SearchResultsPage,
+  WishlistPage,
+  NotificationsPage,
+  ProductDetailPage,
+  OrderDetailPage,
+  CheckoutResult,
+  HomePage,
+  ProfilePage as CustomerProfilePage
+} from './components/customer';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'admin' | 'customer' }> = ({
@@ -393,9 +397,11 @@ const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* Homepage route - accessible without login */}
+        <Route path="/" element={<HomePage />} />
+
+        {/* Default redirect for unknown routes */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
@@ -407,7 +413,9 @@ const App: React.FC = () => {
       <NotificationProvider>
         <CartProvider>
           <VoiceProvider>
-            <AppRoutes />
+            <ToastProvider>
+              <AppRoutes />
+            </ToastProvider>
           </VoiceProvider>
         </CartProvider>
       </NotificationProvider>

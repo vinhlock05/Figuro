@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from enum import Enum
 
 
@@ -21,8 +21,13 @@ class Intent(str, Enum):
     CANCEL_ORDER = "cancel_order"
     CHECK_ORDER_STATUS = "check_order_status"
     GET_PRODUCT_INFO = "get_product_info"
+    SEARCH_PRODUCTS = "search_products"
+    CHECK_STOCK = "check_stock"
+    CUSTOMIZATION_INQUIRY = "customization_inquiry"
+    PRICE_INQUIRY = "price_inquiry"
     GREETING = "greeting"
     GOODBYE = "goodbye"
+    HELP = "help"
     UNKNOWN = "unknown"
 
 
@@ -49,6 +54,7 @@ class VoiceResponse(BaseModel):
     response_text: str
     audio_url: Optional[str] = None
     processing_time_ms: int
+    product_recommendations: Optional[List[Dict[str, Any]]] = None
 
 
 class TTSRequest(BaseModel):

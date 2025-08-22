@@ -39,7 +39,7 @@ model User {
 // Categories table
 model Category {
   id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(100)
+  name        String    @unique @db.VarChar(100)
   description String?
 
   // Relations
@@ -83,6 +83,7 @@ model CustomizationOption {
   // Relations
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@unique([productId, optionType, optionValue])
   @@map("customization_options")
 }
 

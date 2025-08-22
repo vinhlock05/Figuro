@@ -18,12 +18,13 @@ export const placeOrder = async (req: AuthRequest, res: Response) => {
 
 export const getUserOrders = async (req: AuthRequest, res: Response) => {
     try {
-        const orders = await orderService.getUserOrders(req.user.userId)
-        return sendResponse(res, 200, 'Orders fetched', { orders })
+        const { page, limit } = req.query;
+        const result = await orderService.getUserOrders(req.user.userId, { page, limit });
+        return sendResponse(res, 200, 'Orders fetched', result);
     } catch (error: any) {
-        return sendError(res, 500, error.message || 'Failed to get orders')
+        return sendError(res, 500, error.message || 'Failed to get orders');
     }
-}
+};
 
 export const getOrderDetails = async (req: AuthRequest, res: Response) => {
     try {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Mail, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 
@@ -113,27 +114,34 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
-                <div className="text-center">
-                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100">
-                        <Mail className="h-6 w-6 text-indigo-600" />
+                <div className="text-center relative">
+                    {/* Back to Home Button - Top Left */}
+                    <Link
+                        to="/"
+                        className="absolute -top-2 -left-2 flex items-center space-x-2 px-3 py-2 text-neutral-700 hover:text-brand dark:text-neutral-100 transition-all duration-300 group"
+                    >
+                        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" />
+                        <span className="font-medium text-sm">Back to Home</span>
+                    </Link>
+
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-brand/10 text-brand">
+                        <Mail className="h-7 w-7" />
                     </div>
-                    <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                        Xác thực email
+                    <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+                        Email verification
                     </h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                        Chúng tôi đã gửi mã 6 số đến
+                    <p className="text-neutral-500 dark:text-neutral-300">
+                        We've sent a 6-digit code to your email address
                     </p>
-                    <p className="text-sm font-medium text-gray-900">{email}</p>
+                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-200">{email}</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                <form onSubmit={handleSubmit} className="mt-4 space-y-6">
                     <div>
-                        <label htmlFor="otp" className="sr-only">
-                            Nhập mã xác thực
-                        </label>
-                        <div className="flex justify-center space-x-2">
+                        <label htmlFor="otp" className="sr-only">Enter verification code</label>
+                        <div className="flex justify-center space-x-3">
                             {otp.map((digit, index) => (
                                 <input
                                     key={index}
@@ -147,74 +155,35 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
                                     value={digit}
                                     onChange={(e) => handleOtpChange(index, e.target.value)}
                                     onKeyDown={(e) => handleKeyDown(index, e)}
-                                    className="w-12 h-12 text-center text-lg font-semibold border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="w-14 h-14 text-center text-xl font-bold border-2 border-neutral-300 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent bg-white dark:bg-neutral-800 dark:text-neutral-100"
                                     placeholder="0"
                                 />
                             ))}
                         </div>
-                        <p className="mt-2 text-xs text-gray-500 text-center">
-                            Nhập mã 6 số từ email của bạn
-                        </p>
+                        <p className="mt-2 text-xs text-neutral-500 text-center">Enter the 6-digit code from your email</p>
                     </div>
 
                     {error && (
-                        <div className="rounded-md bg-red-50 p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                                </div>
-                            </div>
-                        </div>
+                        <div className="rounded-2xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{error}</div>
                     )}
 
                     <div className="space-y-4">
-                        <button
-                            type="submit"
-                            disabled={isVerifying || otp.join('').length !== 6}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isVerifying ? (
-                                <div className="flex items-center">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Đang xác thực...
-                                </div>
-                            ) : (
-                                'Xác thực Email'
-                            )}
+                        <button type="submit" disabled={isVerifying || otp.join('').length !== 6} className="btn-primary w-full h-12 rounded-xl text-base border-2 border-brand/60">
+                            {isVerifying ? 'Verifying…' : 'Verify Email'}
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={handleResend}
-                            disabled={isResending}
-                            className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                        >
-                            {isResending ? (
-                                <>
-                                    <RefreshCw className="animate-spin h-4 w-4 mr-2" />
-                                    Đang gửi...
-                                </>
-                            ) : (
-                                <>
-                                    <Mail className="h-4 w-4 mr-2" />
-                                    Gửi lại mã
-                                </>
-                            )}
+                        <button type="button" onClick={handleResend} disabled={isResending} className="btn-secondary w-full h-12 rounded-xl text-base">
+                            {isResending ? 'Sending…' : 'Resend code'}
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={onBackToLogin}
-                            className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Quay lại đăng nhập
+                        <button type="button" onClick={onBackToLogin} className="btn-secondary w-full h-12 rounded-xl text-base">
+                            <ArrowLeft className="h-4 w-4 mr-2" /> Back to login
                         </button>
                     </div>
                 </form>
 
                 <div className="text-center">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-neutral-500">
                         Didn't receive the code? Check your spam folder or try resending.
                     </p>
                 </div>

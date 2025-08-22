@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { customerService } from '../../services/customerService';
-import type { Product } from '../../services/customerService';
-import ToastMessage, { type ToastType } from '../common/ToastMessage';
-import { formatVND } from '../../utils/currency';
+import { customerService } from '../../../services/customerService';
+import type { Product } from '../../../services/customerService';
+import ToastMessage, { type ToastType } from '../../common/ToastMessage';
+import { formatVND } from '../../../utils/currency';
 import {
     Search,
     Filter,

@@ -1,16 +1,25 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { customerService } from '../../services/customerService';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { customerService } from '../../../services/customerService';
+import {
+    CheckCircle,
+    XCircle,
+    Clock,
+    Package,
+    Truck,
+    Home,
+    ShoppingBag
+} from 'lucide-react';
 
 const useQuery = () => {
-    const { search } = useLocation();
-    return useMemo(() => new URLSearchParams(search), [search]);
+    const [searchParams] = useSearchParams();
+    return useState(searchParams);
 };
 
 const CheckoutResult: React.FC = () => {
     const navigate = useNavigate();
-    const query = useQuery();
-    const [message, setMessage] = useState<string>('Đang xác minh thanh toán...');
+    const [query] = useQuery();
+    const [message, setMessage] = useState<string>('Verifying payment...');
     const [status, setStatus] = useState<'success' | 'failed' | 'pending'>('pending');
     const [resolvedOrderId, setResolvedOrderId] = useState<string>('');
 
@@ -57,13 +66,13 @@ const CheckoutResult: React.FC = () => {
                 setResolvedOrderId(orderId || '');
                 if (isSuccess === true) {
                     setStatus('success');
-                    setMessage('Thanh toán thành công.');
+                    setMessage('Payment successful.');
                 } else if (isSuccess === false) {
                     setStatus('failed');
-                    setMessage('Thanh toán thất bại hoặc đã hủy.');
+                    setMessage('Payment failed or cancelled.');
                 } else {
                     setStatus('pending');
-                    setMessage('Đang xác minh thanh toán...');
+                    setMessage('Verifying payment...');
                 }
 
                 // If we have a transactionId, verify with backend (non-blocking, and do not downgrade success to failed if still pending)
@@ -75,12 +84,12 @@ const CheckoutResult: React.FC = () => {
                         }
                         if (result.status === 'success') {
                             setStatus('success');
-                            setMessage('Thanh toán thành công.');
+                            setMessage('Payment successful.');
                         } else if (result.status === 'failed') {
                             // Only mark failed if we did not already detect success from gateway
                             if (isSuccess !== true) {
                                 setStatus('failed');
-                                setMessage('Thanh toán thất bại.');
+                                setMessage('Payment failed.');
                             }
                         }
                     } catch (e) {
@@ -89,7 +98,7 @@ const CheckoutResult: React.FC = () => {
                 }
             } catch (error) {
                 setStatus('failed');
-                setMessage('Có lỗi xảy ra khi xử lý kết quả thanh toán.');
+                setMessage('An error occurred while processing payment result.');
             }
         };
 
@@ -98,20 +107,22 @@ const CheckoutResult: React.FC = () => {
     }, []);
 
     return (
-        <div className="min-h-96 flex items-center justify-center">
-            <div className="bg-white rounded-lg shadow p-8 text-center space-y-4 w-full max-w-md">
+        <div className="min-h-96 flex items-center justify-center px-6 py-12">
+            <div className="bg-white rounded-xl shadow-lg p-10 text-center space-y-6 w-full max-w-lg">
                 {status === 'pending' ? (
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
                 ) : (
-                    <div className={`mx-auto h-10 w-10 rounded-full flex items-center justify-center ${status === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>✓</div>
+                    <div className={`mx-auto h-12 w-12 rounded-full flex items-center justify-center text-2xl font-bold ${status === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                        {status === 'success' ? '✓' : '✗'}
+                    </div>
                 )}
-                <p className="text-gray-800 font-medium">{message}</p>
-                <div className="pt-2">
+                <p className="text-gray-800 font-medium text-lg">{message}</p>
+                <div className="pt-4">
                     <button
                         onClick={() => navigate(resolvedOrderId ? `/orders/${resolvedOrderId}` : '/orders')}
-                        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md font-medium hover:bg-indigo-700"
+                        className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
                     >
-                        Tới chi tiết đơn hàng
+                        Go to Order Details
                     </button>
                 </div>
             </div>

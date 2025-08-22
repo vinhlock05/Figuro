@@ -208,14 +208,20 @@ class CustomerService {
         return response.data.data?.suggestions || [];
     }
 
-    async getCustomizationOptions(productId: string): Promise<GroupedCustomizationOptions> {
+    getCustomizationOptions = async (productId: string): Promise<GroupedCustomizationOptions> => {
         const response = await axios.get(`${API_BASE_URL}/api/products/${productId}/customizations`, {
             headers: this.getAuthHeaders(),
         });
         return response.data.data?.options || {};
     }
 
-    async calculateCustomizedPrice(productId: string, customizations: Array<{ type: string; value: string }>): Promise<{ price: number }> {
+    calculateCustomizedPrice = async (productId: string, customizations: Array<{ type: string; value: string }>): Promise<{
+        price?: number;
+        totalPrice?: number;
+        basePrice?: number;
+        priceAdjustment?: number;
+        customizations?: Array<{ type: string; value: string }>;
+    }> => {
         const response = await axios.post(`${API_BASE_URL}/api/products/${productId}/calculate-price`, {
             customizations,
         }, {
@@ -289,11 +295,12 @@ class CustomerService {
     }
 
     // Order APIs
-    async getOrders(): Promise<Order[]> {
+    async getOrders(params?: { page?: number; limit?: number }): Promise<{ orders: Order[]; pagination: { page: number; limit: number; total: number; pages: number } }> {
         const response = await axios.get(`${API_BASE_URL}/api/order`, {
             headers: this.getAuthHeaders(),
+            params
         });
-        return response.data.data?.orders || [];
+        return response.data.data || { orders: [], pagination: { page: 1, limit: 10, total: 0, pages: 0 } };
     }
 
     async getOrder(orderId: string): Promise<Order> {

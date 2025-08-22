@@ -13,7 +13,6 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({ onError }) => {
     const handleGoogleLogin = async () => {
         try {
             const authUrl = await getGoogleAuthUrl();
-            // Add provider parameter to callback URL
             const url = new URL(authUrl);
             url.searchParams.set('provider', 'google');
             window.location.href = url.toString();
@@ -26,7 +25,6 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({ onError }) => {
     const handleFacebookLogin = async () => {
         try {
             const authUrl = await getFacebookAuthUrl();
-            // Add provider parameter to callback URL
             const url = new URL(authUrl);
             url.searchParams.set('provider', 'facebook');
             window.location.href = url.toString();
@@ -37,13 +35,14 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({ onError }) => {
     };
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
+            {/* Divider */}
             <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300" />
+                    <div className="w-full border-t border-neutral-200 dark:border-neutral-700" />
                 </div>
-                <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-gray-50 text-gray-500">Hoặc tiếp tục với</span>
+                <div className="relative flex justify-center text-xs">
+                    <span className="px-3 py-0.5 bg-white dark:bg-neutral-900 text-neutral-500 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-md">Or continue with</span>
                 </div>
             </div>
 
@@ -51,7 +50,7 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({ onError }) => {
                 <button
                     type="button"
                     onClick={handleGoogleLogin}
-                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="w-full inline-flex items-center justify-center h-12 px-4 border-2 border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-smooth"
                 >
                     <img src={googleIcon} alt="Google" className="w-5 h-5" />
                     <span className="ml-2">Google</span>
@@ -60,7 +59,7 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({ onError }) => {
                 <button
                     type="button"
                     onClick={handleFacebookLogin}
-                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="w-full inline-flex items-center justify-center h-12 px-4 border-2 border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-smooth"
                 >
                     <img src={facebookIcon} alt="Facebook" className="w-5 h-5" />
                     <span className="ml-2">Facebook</span>

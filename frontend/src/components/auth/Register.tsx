@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield, ArrowLeft } from 'lucide-react';
 
 const registerSchema = yup.object({
     name: yup
@@ -67,163 +68,154 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onError, on
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Tạo tài khoản mới
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Hoặc{' '}
-                        <button
-                            onClick={onSwitchToLogin}
-                            className="font-medium text-indigo-600 hover:text-indigo-500"
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-lg w-full animate-fade-in">
+                {/* Auth card */}
+                <div className="card p-8 border-2 border-neutral-100 dark:border-neutral-700 shadow-soft">
+                    {/* Header */}
+                    <div className="text-center mb-8 relative">
+                        {/* Back to Home Button - Top Left */}
+                        <Link
+                            to="/"
+                            className="absolute -top-2 -left-2 flex items-center space-x-2 px-3 py-2 text-neutral-700 hover:text-brand dark:text-neutral-100 transition-all duration-300 group"
                         >
-                            đăng nhập vào tài khoản hiện có
-                        </button>
-                    </p>
+                            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" />
+                            <span className="font-medium text-sm">Back to Home</span>
+                        </Link>
+
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-brand/10 text-brand">
+                            <Shield className="h-7 w-7" />
+                        </div>
+                        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+                            Join Figuro
+                        </h2>
+                        <p className="text-neutral-500 dark:text-neutral-200">
+                            Or{' '}
+                            <button
+                                onClick={onSwitchToLogin}
+                                className="font-medium text-brand hover:underline"
+                            >
+                                sign in to existing account
+                            </button>
+                        </p>
+                    </div>
+
+                    <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="name" className="sr-only">Full Name</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <User className="h-5 w-5 text-brand" />
+                                    </div>
+                                    <input
+                                        {...register('name')}
+                                        id="name"
+                                        type="text"
+                                        autoComplete="name"
+                                        className="input-primary w-full pl-12 border-2 border-neutral-300 dark:border-neutral-700 h-12 rounded-xl text-base"
+                                        placeholder="Full Name"
+                                    />
+                                </div>
+                                {errors.name && (
+                                    <p className="mt-2 text-sm text-danger">{errors.name.message}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label htmlFor="email" className="sr-only">Email Address</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Mail className="h-5 w-5 text-brand" />
+                                    </div>
+                                    <input
+                                        {...register('email')}
+                                        id="email"
+                                        type="email"
+                                        autoComplete="email"
+                                        className="input-primary w-full pl-12 border-2 border-neutral-300 dark:border-neutral-700 h-12 rounded-xl text-base"
+                                        placeholder="Email Address"
+                                    />
+                                </div>
+                                {errors.email && (
+                                    <p className="mt-2 text-sm text-danger">{errors.email.message}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label htmlFor="password" className="sr-only">Password</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Lock className="h-5 w-5 text-brand" />
+                                    </div>
+                                    <input
+                                        {...register('password')}
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        autoComplete="new-password"
+                                        className="input-primary w-full pl-12 pr-12 border-2 border-neutral-300 dark:border-neutral-700 h-12 rounded-xl text-base"
+                                        placeholder="Password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center z-10 text-neutral-500 hover:text-neutral-700 dark:text-neutral-300 dark:hover:text-neutral-100"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
+                                </div>
+                                {errors.password && (
+                                    <p className="mt-2 text-sm text-danger">{errors.password.message}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Lock className="h-5 w-5 text-brand" />
+                                    </div>
+                                    <input
+                                        {...register('confirmPassword')}
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        autoComplete="new-password"
+                                        className="input-primary w-full pl-12 pr-12 border-2 border-neutral-300 dark:border-neutral-700 h-12 rounded-xl text-base"
+                                        placeholder="Confirm New Password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center z-10 text-neutral-500 hover:text-neutral-700 dark:text-neutral-300 dark:hover:text-neutral-100"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    >
+                                        {showConfirmPassword ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
+                                </div>
+                                {errors.confirmPassword && (
+                                    <p className="mt-2 text-sm text-danger">{errors.confirmPassword.message}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="rounded-2xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{error}</div>
+                        )}
+
+                        <div>
+                            <button type="submit" disabled={isSubmitting} className="btn-primary w-full h-12 rounded-xl text-base border-2 border-brand/60">
+                                {isSubmitting ? 'Creating account…' : 'Create account'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                    <div className="space-y-4">
-                        <div>
-                            <label htmlFor="name" className="sr-only">
-                                Họ và tên
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    {...register('name')}
-                                    id="name"
-                                    type="text"
-                                    autoComplete="name"
-                                    className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                    placeholder="Họ và tên"
-                                />
-                            </div>
-                            {errors.name && (
-                                <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label htmlFor="email" className="sr-only">
-                                Địa chỉ email
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    {...register('email')}
-                                    id="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                    placeholder="Địa chỉ email"
-                                />
-                            </div>
-                            {errors.email && (
-                                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label htmlFor="password" className="sr-only">
-                                Mật khẩu
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    {...register('password')}
-                                    id="password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    autoComplete="new-password"
-                                    className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="Mật khẩu"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center z-10 hover:text-gray-600 focus:outline-none focus:text-gray-600"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="h-5 w-5 text-gray-400" />
-                                    ) : (
-                                        <Eye className="h-5 w-5 text-gray-400" />
-                                    )}
-                                </button>
-                            </div>
-                            {errors.password && (
-                                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label htmlFor="confirmPassword" className="sr-only">
-                                Xác nhận mật khẩu
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    {...register('confirmPassword')}
-                                    id="confirmPassword"
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    autoComplete="new-password"
-                                    className="appearance-none rounded-md relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="Xác nhận mật khẩu"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center z-10 hover:text-gray-600 focus:outline-none focus:text-gray-600"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                >
-                                    {showConfirmPassword ? (
-                                        <EyeOff className="h-5 w-5 text-gray-400" />
-                                    ) : (
-                                        <Eye className="h-5 w-5 text-gray-400" />
-                                    )}
-                                </button>
-                            </div>
-                            {errors.confirmPassword && (
-                                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="rounded-md bg-red-50 p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? (
-                                <div className="flex items-center">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Đang tạo tài khoản...
-                                </div>
-                            ) : (
-                                'Tạo tài khoản'
-                            )}
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     );

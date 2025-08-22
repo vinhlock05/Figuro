@@ -9,7 +9,9 @@ import librosa
 import soundfile as sf
 import numpy as np
 import re
-from typing import Tuple, List, Optional
+import requests
+import json
+from typing import Tuple, List, Optional, Dict, Any
 from pathlib import Path
 from fastapi import UploadFile, HTTPException
 from .schemas import (
@@ -28,7 +30,19 @@ class VoiceAgentService:
         self.tts_engine = pyttsx3.init()
         self.setup_tts_engine()
 
-        # Intent patterns for Vietnamese - Expanded and more flexible
+        # Chatbot API configuration
+        self.chatbot_api_url = os.getenv(
+            'CHATBOT_API_URL', 'http://localhost:3000/api/chatbot')
+        self.backend_api_url = os.getenv(
+            'BACKEND_API_URL', 'http://localhost:3000/api')
+
+        # Product knowledge cache
+        self.product_cache = {}
+        self.category_cache = {}
+        self.last_cache_update = 0
+        self.cache_ttl = 300  # 5 minutes
+
+        # Intent patterns for Vietnamese - Enhanced with product knowledge
         self.intent_patterns = {
             Intent.CREATE_ORDER: [
                 r"(?:muốn|cần|đặt|mua|order|lấy|có thể)\s*(?:một|mô hình|figure|sản phẩm)",
@@ -64,6 +78,27 @@ class VoiceAgentService:
                 r"(?:one piece|dragon ball|attack on titan|demon slayer|my hero academia)",
                 r"(?:anime|manga)\s+(?:figure|mô hình)"
             ],
+            Intent.SEARCH_PRODUCTS: [
+                r"(?:tìm kiếm|search|find)\s+(?:theo|by)\s+(?:danh mục|category)",
+                r"(?:xem|show)\s+(?:tất cả|all)\s+(?:danh mục|categories)",
+                r"(?:sản phẩm|products)\s+(?:trong|of)\s+(?:danh mục|category)",
+                r"(?:naruto|one piece|dragon ball|demon slayer|my hero academia|attack on titan|jujutsu kaisen)"
+            ],
+            Intent.CHECK_STOCK: [
+                r"(?:còn hàng|in stock|available|hết hàng|out of stock)",
+                r"(?:kiểm tra|check)\s+(?:hàng tồn kho|stock|availability)",
+                r"(?:số lượng|quantity)\s+(?:còn lại|remaining)"
+            ],
+            Intent.CUSTOMIZATION_INQUIRY: [
+                r"(?:tùy chỉnh|customize|customization)",
+                r"(?:màu sắc|color|size|accessory|phụ kiện)",
+                r"(?:thay đổi|change|modify)\s+(?:màu|color|size)"
+            ],
+            Intent.PRICE_INQUIRY: [
+                r"(?:giá|price|cost|bao nhiêu|rẻ|đắt)",
+                r"(?:khuyến mãi|sale|discount|promotion)",
+                r"(?:so sánh|compare)\s+(?:giá|price)"
+            ],
             Intent.GREETING: [
                 r"(?:xin chào|hello|hi|chào|hey)",
                 r"(?:chào|hello)\s+(?:bạn|anh|chị|admin|support)",
@@ -75,27 +110,36 @@ class VoiceAgentService:
                 r"(?:hẹn gặp lại|see you|until next time)",
                 r"(?:cảm ơn|thank you)\s*(?:và|rồi|nhé|很多|much)?",
                 r"(?:kết thúc|end|finish|done)"
+            ],
+            Intent.HELP: [
+                r"(?:giúp|help|hỗ trợ|support|tư vấn|advice)",
+                r"(?:không hiểu|don't understand|confused)",
+                r"(?:hướng dẫn|guide|instruction|tutorial)"
             ]
         }
 
-        # Entity extraction patterns - More comprehensive
+        # Entity extraction patterns - Enhanced with product knowledge
         self.entity_patterns = {
             "product": [
                 # Character names - case insensitive
-                r"(naruto|uzumaki|sasuke|kakashi|itachi)",
-                r"(goku|vegeta|gohan|piccolo|frieza|cell|majin buu)",
-                r"(luffy|zoro|sanji|nami|chopper|robin|brook|franky|jinbe)",
+                r"(naruto|uzumaki|sasuke|kakashi|itachi|minato|madara|hinata|jiraya)",
+                r"(goku|vegeta|gohan|piccolo|frieza|cell|majin buu|goku black|jiren|beerus|whis)",
+                r"(luffy|zoro|sanji|nami|chopper|robin|brook|franky|jinbe|ace|law|kid|katakuri)",
                 r"(ichigo|rukia|byakuya|kenpachi|aizen)",
                 r"(eren|mikasa|levi|armin|annie)",
-                r"(tanjiro|nezuko|zenitsu|inosuke|giyu)",
-                r"(deku|bakugo|todoroki|all might|endeavor)",
+                r"(tanjiro|nezuko|zenitsu|inosuke|giyu|rengoku)",
+                r"(deku|bakugo|todoroki|all might|endeavor|uraraka|kirishima)",
                 # Series names
-                r"(one piece|dragon ball|naruto|bleach|attack on titan|demon slayer|my hero academia)",
+                r"(one piece|dragon ball|naruto|bleach|attack on titan|demon slayer|my hero academia|jujutsu kaisen)",
                 r"(studio ghibli|spirited away|totoro|princess mononoke)",
                 # General patterns
                 r"(?:mô hình|figure|model)\s+([a-z\s]+)",
                 r"(?:anime|manga)\s+([a-z\s]+)",
                 r"(?:nhân vật|character)\s+([a-z\s]+)"
+            ],
+            "category": [
+                r"(naruto|one piece|dragon ball|demon slayer|my hero academia|attack on titan|jujutsu kaisen)",
+                r"(anime|manga|figure|mô hình|nhân vật)"
             ],
             "quantity": [
                 r"(\d+)\s+(?:cái|chiếc|mô hình|figure|sản phẩm)",
@@ -104,8 +148,111 @@ class VoiceAgentService:
             ],
             "color": [
                 r"(?:màu\s+)?(đỏ|xanh|vàng|đen|trắng|hồng|tím|cam|red|blue|yellow|black|white|pink|purple|orange)"
+            ],
+            "price_range": [
+                r"(?:giá\s+)?(rẻ|cheap|đắt|expensive|cao|thấp|low|high)",
+                r"(\d+)\s*(?:triệu|tr|nghìn|k|đồng|vnd)",
+                r"(?:dưới|under|trên|over)\s+(\d+)\s*(?:triệu|tr|nghìn|k)"
             ]
         }
+
+    async def refresh_product_cache(self):
+        """Refresh product and category cache from backend"""
+        try:
+            current_time = time.time()
+            if current_time - self.last_cache_update < self.cache_ttl:
+                return  # Cache still valid
+
+            # Fetch products from backend
+            products_response = requests.get(
+                f"{self.backend_api_url}/products")
+            if products_response.status_code == 200:
+                self.product_cache = {
+                    p['id']: p for p in products_response.json()}
+
+            # Fetch categories from backend
+            categories_response = requests.get(
+                f"{self.backend_api_url}/categories")
+            if categories_response.status_code == 200:
+                self.category_cache = {
+                    c['id']: c for c in categories_response.json()}
+
+            self.last_cache_update = current_time
+            logger.info(
+                f"Product cache refreshed: {len(self.product_cache)} products, {len(self.category_cache)} categories")
+
+        except Exception as e:
+            logger.error(f"Error refreshing product cache: {e}")
+
+    async def query_chatbot(self, text: str, language: str = 'vi-VN') -> Dict[str, Any]:
+        """Query the chatbot service for intelligent responses"""
+        try:
+            response = requests.post(
+                f"{self.chatbot_api_url}/query",
+                json={
+                    "text": text,
+                    "language": language,
+                    "context": {"source": "voice_agent"}
+                },
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.warning(f"Chatbot API returned {response.status_code}")
+                return {}
+
+        except Exception as e:
+            logger.error(f"Error querying chatbot: {e}")
+            return {}
+
+    async def get_product_recommendations(self, intent: str, entities: List[Entity]) -> List[Dict[str, Any]]:
+        """Get product recommendations based on intent and entities"""
+        await self.refresh_product_cache()
+
+        recommendations = []
+
+        # Extract product-related entities
+        product_names = [e.value for e in entities if e.type == "product"]
+        categories = [e.value for e in entities if e.type == "category"]
+        price_ranges = [e.value for e in entities if e.type == "price_range"]
+
+        if not self.product_cache:
+            return recommendations
+
+        # Filter products based on entities
+        for product in self.product_cache.values():
+            score = 0
+
+            # Product name match
+            if any(name.lower() in product['name'].lower() for name in product_names):
+                score += 10
+
+            # Category match
+            if categories and product.get('category') and any(cat.lower() in product['category']['name'].lower() for cat in categories):
+                score += 8
+
+            # Price range match
+            if price_ranges:
+                price = float(product['price'])
+                for price_range in price_ranges:
+                    if 'rẻ' in price_range.lower() or 'cheap' in price_range.lower():
+                        if price < 2000000:  # Under 2M VND
+                            score += 5
+                    elif 'đắt' in price_range.lower() or 'expensive' in price_range.lower():
+                        if price > 3000000:  # Over 3M VND
+                            score += 5
+
+            if score > 0:
+                recommendations.append({
+                    **product,
+                    'relevance_score': score
+                })
+
+        # Sort by relevance score and return top 5
+        recommendations.sort(key=lambda x: x['relevance_score'], reverse=True)
+        return recommendations[:5]
 
     def setup_tts_engine(self):
         """Setup text-to-speech engine with optimized settings"""
@@ -144,9 +291,17 @@ class VoiceAgentService:
                 confidence = self._calculate_confidence(
                     transcript, intent, entities)
 
-                # Generate response
-                response_text = self._generate_response(
-                    intent, entities, transcript)
+                # Query chatbot for intelligent response
+                chatbot_response = await self.query_chatbot(transcript, language.value)
+
+                # Get product recommendations if relevant
+                product_recommendations = []
+                if intent in [Intent.GET_PRODUCT_INFO, Intent.SEARCH_PRODUCTS]:
+                    product_recommendations = await self.get_product_recommendations(intent, entities)
+
+                # Generate enhanced response
+                response_text = self._generate_enhanced_response(
+                    intent, entities, transcript, chatbot_response, product_recommendations)
 
                 # Generate TTS audio if requested
                 audio_url = await self._generate_tts_audio(response_text, language) if enable_tts else None
@@ -160,7 +315,8 @@ class VoiceAgentService:
                     confidence=confidence,
                     response_text=response_text,
                     audio_url=audio_url,
-                    processing_time_ms=processing_time
+                    processing_time_ms=processing_time,
+                    product_recommendations=product_recommendations
                 )
 
             finally:
@@ -230,7 +386,25 @@ class VoiceAgentService:
             logger.error(f"Error in speech to text: {str(e)}")
             return "Lỗi xử lý âm thanh"
 
-    def _extract_intent(self, text: str) -> Intent:
+    def _matches_price_range(self, price: float, price_range: str) -> bool:
+        """Check if a price matches the specified price range"""
+        try:
+            if price_range.startswith("under_"):
+                max_price = float(price_range.split("_")[1])
+                return price <= max_price
+            elif price_range.startswith("over_"):
+                min_price = float(price_range.split("_")[1])
+                return price >= min_price
+            elif price_range in ["low", "rẻ", "cheap"]:
+                return price < 2000000  # Under 2M VND
+            elif price_range in ["high", "đắt", "expensive"]:
+                return price > 3000000  # Over 3M VND
+            else:
+                return True  # No filter applied
+        except:
+            return True
+
+    def _extract_intent(self, text: str) -> str:
         """Extract intent from text using pattern matching"""
         text_lower = text.lower()
 
@@ -250,87 +424,94 @@ class VoiceAgentService:
             for pattern in patterns:
                 matches = re.finditer(pattern, text_lower)
                 for match in matches:
-                    if match.groups():
-                        value = match.group(1).strip()
-                    else:
-                        value = match.group(0).strip()
-
+                    value = match.group(
+                        1) if match.groups() else match.group(0)
                     entities.append(Entity(
                         type=entity_type,
                         value=value,
-                        confidence=0.8  # Simple confidence score
+                        confidence=0.8
                     ))
 
         return entities
 
-    def _calculate_confidence(self, transcript: str, intent: Intent, entities: List[Entity]) -> float:
-        """Calculate overall confidence score"""
-        base_confidence = 0.7
+    def _calculate_confidence(self, text: str, intent: str, entities: List[Entity]) -> float:
+        """Calculate confidence score for the extracted intent and entities"""
+        base_confidence = 0.5
 
-        # Boost confidence if intent is not unknown
-        if intent != Intent.UNKNOWN:
+        # Boost confidence based on text length and clarity
+        if len(text.strip()) > 10:
             base_confidence += 0.2
 
-        # Boost confidence based on entities found
+        # Boost confidence if entities are found
         if entities:
-            base_confidence += min(0.1 * len(entities), 0.1)
+            base_confidence += 0.2
 
-        # Reduce confidence for very short transcripts
-        if len(transcript.split()) < 3:
-            base_confidence -= 0.1
+        # Boost confidence for specific intents
+        if intent in [Intent.GREETING, Intent.GOODBYE]:
+            base_confidence += 0.1
 
         return min(max(base_confidence, 0.0), 1.0)
 
-    def _generate_response(self, intent: Intent, entities: List[Entity], transcript: str) -> str:
-        """Generate appropriate response based on intent and entities"""
+    def _generate_enhanced_response(self, intent: str, entities: List[Entity], transcript: str,
+                                    chatbot_response: Dict[str, Any], product_recommendations: List[Dict[str, Any]]) -> str:
+        """Generate enhanced response using chatbot and product knowledge"""
 
-        # Extract relevant entities
-        product_entities = [e for e in entities if e.type == "product"]
-        quantity_entities = [e for e in entities if e.type == "quantity"]
+        # Use chatbot response if available
+        if chatbot_response.get('response'):
+            base_response = chatbot_response['response']
+        else:
+            base_response = self._generate_basic_response(
+                intent, entities, transcript)
 
-        if intent == Intent.CREATE_ORDER:
-            if product_entities:
-                product_name = product_entities[0].value
-                quantity = quantity_entities[0].value if quantity_entities else "1"
-                return f"Tôi hiểu bạn muốn đặt {quantity} sản phẩm {product_name}. Để đặt hàng, bạn có thể vào trang sản phẩm và thêm vào giỏ hàng. Tôi có thể giúp bạn tìm kiếm sản phẩm này không?"
+        # Enhance with product recommendations
+        if product_recommendations:
+            product_info = self._format_product_recommendations(
+                product_recommendations)
+            if product_info:
+                base_response += f"\n\n{product_info}"
+
+        return base_response
+
+    def _format_product_recommendations(self, recommendations: List[Dict[str, Any]]) -> str:
+        """Format product recommendations for voice response"""
+        if not recommendations:
+            return ""
+
+        response = "Tôi tìm thấy một số sản phẩm phù hợp:\n"
+
+        # Limit to top 3 for voice
+        for i, product in enumerate(recommendations[:3], 1):
+            name = product.get('name', 'Unknown')
+            price = product.get('price', 0)
+            category = product.get('category', {}).get('name', 'Unknown')
+
+            # Format price in Vietnamese
+            if price >= 1000000:
+                price_str = f"{price // 1000000} triệu VND"
             else:
-                return "Bạn muốn đặt hàng sản phẩm gì? Hãy cho tôi biết tên sản phẩm bạn quan tâm."
+                price_str = f"{price:,} VND"
 
-        elif intent == Intent.GET_PRODUCT_INFO:
-            if product_entities:
-                product_name = product_entities[0].value
-                return f"Tôi hiểu bạn muốn biết thông tin về {product_name}. Hiện tại chúng tôi có nhiều mô hình figure chất lượng cao. Bạn có thể xem chi tiết sản phẩm trong trang Products hoặc tôi có thể giúp bạn tìm kiếm sản phẩm tương tự."
-            else:
-                return "Bạn muốn biết thông tin về sản phẩm nào? Chúng tôi có nhiều loại figure như Naruto, One Piece, Dragon Ball, và nhiều anime khác."
+            response += f"{i}. {name} - {category} - Giá {price_str}\n"
 
-        elif intent == Intent.CHECK_ORDER_STATUS:
-            return "Để kiểm tra trạng thái đơn hàng, bạn có thể vào trang 'Đơn hàng' trong menu. Ở đó bạn sẽ thấy tất cả đơn hàng và trạng thái hiện tại của chúng."
+        return response
 
-        elif intent == Intent.GREETING:
-            return "Xin chào! Tôi là trợ lý ảo Figuro. Tôi có thể giúp bạn:\n- Tìm kiếm và tư vấn sản phẩm figure\n- Kiểm tra thông tin đơn hàng\n- Hướng dẫn đặt hàng\n- Trả lời câu hỏi về sản phẩm\n\nBạn cần tôi giúp gì?"
+    def _generate_basic_response(self, intent: str, entities: List[Entity], transcript: str) -> str:
+        """Generate basic response when chatbot is not available"""
+        responses = {
+            Intent.CREATE_ORDER: "Tôi sẽ giúp bạn đặt hàng. Bạn muốn mua sản phẩm nào?",
+            Intent.CANCEL_ORDER: "Tôi hiểu bạn muốn hủy đơn hàng. Bạn có thể cung cấp mã đơn hàng không?",
+            Intent.CHECK_ORDER_STATUS: "Tôi sẽ kiểm tra trạng thái đơn hàng cho bạn. Bạn có mã đơn hàng không?",
+            Intent.GET_PRODUCT_INFO: "Tôi sẽ tìm thông tin sản phẩm cho bạn. Bạn quan tâm đến sản phẩm nào?",
+            Intent.SEARCH_PRODUCTS: "Tôi sẽ giúp bạn tìm kiếm sản phẩm. Bạn muốn tìm theo danh mục nào?",
+            Intent.CHECK_STOCK: "Tôi sẽ kiểm tra tình trạng hàng tồn kho. Bạn muốn kiểm tra sản phẩm nào?",
+            Intent.CUSTOMIZATION_INQUIRY: "Tôi sẽ giải thích về các tùy chọn tùy chỉnh. Bạn muốn tùy chỉnh sản phẩm nào?",
+            Intent.PRICE_INQUIRY: "Tôi sẽ cung cấp thông tin về giá cả. Bạn muốn biết giá của sản phẩm nào?",
+            Intent.GREETING: "Xin chào! Tôi là trợ lý ảo của Figuro. Tôi có thể giúp bạn tìm sản phẩm, đặt hàng, hoặc tư vấn về mô hình figure. Bạn cần hỗ trợ gì?",
+            Intent.GOODBYE: "Cảm ơn bạn đã sử dụng dịch vụ của Figuro. Hẹn gặp lại!",
+            Intent.HELP: "Tôi có thể giúp bạn: tìm kiếm sản phẩm, xem danh mục, kiểm tra giá cả, theo dõi đơn hàng, và tư vấn tùy chỉnh. Bạn cần hỗ trợ gì cụ thể?"
+        }
 
-        elif intent == Intent.GOODBYE:
-            return "Cảm ơn bạn đã sử dụng dịch vụ Figuro! Hy vọng bạn tìm được những sản phẩm figure ưng ý. Hẹn gặp lại!"
-
-        else:  # Intent.UNKNOWN or others
-            # Try to give more intelligent responses based on keywords
-            text_lower = transcript.lower()
-
-            # Check for product mentions even if intent wasn't recognized
-            if any(keyword in text_lower for keyword in ['sản phẩm', 'mô hình', 'figure', 'anime', 'manga']):
-                return "Tôi thấy bạn quan tâm đến sản phẩm figure! Chúng tôi có nhiều mô hình anime chất lượng cao. Bạn có thể:\n- Xem trang Products để duyệt tất cả sản phẩm\n- Nói tên nhân vật bạn muốn tìm (ví dụ: Naruto, Goku, Luffy)\n- Hỏi về giá cả hoặc thông tin chi tiết\n\nBạn muốn tìm mô hình nhân vật nào?"
-
-            elif any(keyword in text_lower for keyword in ['đơn hàng', 'order', 'mua', 'đặt']):
-                return "Tôi có thể giúp bạn về đơn hàng! Bạn có thể:\n- Kiểm tra trạng thái đơn hàng hiện tại\n- Đặt hàng sản phẩm mới\n- Hỏi về quy trình đặt hàng\n\nBạn cần hỗ trợ gì cụ thể về đơn hàng?"
-
-            elif any(keyword in text_lower for keyword in ['giá', 'price', 'tiền', 'cost', 'bao nhiêu']):
-                return "Bạn muốn hỏi về giá sản phẩm? Giá figure anime thường dao động từ 500,000đ đến 2,000,000đ tùy vào:\n- Kích thước và chất lượng\n- Thương hiệu sản xuất\n- Độ hiếm của nhân vật\n\nBạn muốn xem giá của sản phẩm nào cụ thể?"
-
-            elif any(keyword in text_lower for keyword in ['help', 'giúp', 'hỗ trợ', 'support']):
-                return "Tôi sẵn sàng hỗ trợ bạn! Tôi có thể giúp:\n✨ Tìm kiếm sản phẩm figure anime\n📦 Kiểm tra và theo dõi đơn hàng\n💰 Tư vấn giá cả và chất lượng\n🛒 Hướng dẫn đặt hàng\n📞 Chuyển sang tư vấn viên\n\nBạn cần hỗ trợ về vấn đề gì?"
-
-            else:
-                return f"Tôi chưa hiểu rõ ý bạn muốn nói '{transcript}'. Có thể bạn muốn:\n\n🔍 **Tìm sản phẩm**: 'Tôi muốn tìm mô hình Naruto'\n📦 **Kiểm tra đơn hàng**: 'Đơn hàng của tôi thế nào?'\n💡 **Tư vấn**: 'Gợi ý sản phẩm cho tôi'\n\nHãy thử nói lại với từ khóa rõ ràng hơn nhé!"
+        return responses.get(intent, "Xin lỗi, tôi chưa hiểu rõ yêu cầu của bạn. Bạn có thể nói rõ hơn được không?")
 
     async def _generate_tts_audio(self, text: str, language: SupportedLanguage) -> Optional[str]:
         """Generate text-to-speech audio file using gTTS for natural voice"""

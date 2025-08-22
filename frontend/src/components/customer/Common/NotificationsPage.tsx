@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { customerService } from '../../services/customerService';
-import ToastMessage, { type ToastType } from '../common/ToastMessage';
+import { customerService } from '../../../services/customerService';
+import ToastMessage, { type ToastType } from '../../common/ToastMessage';
 import { Bell } from 'lucide-react';
 
 const NotificationsPage: React.FC = () => {
@@ -26,7 +26,7 @@ const NotificationsPage: React.FC = () => {
             setToast({
                 open: true,
                 type: 'error',
-                message: 'Không thể tải thông báo. Vui lòng thử lại.'
+                message: 'Cannot load notifications. Please try again.'
             });
         } finally {
             setLoading(false);
@@ -42,32 +42,32 @@ const NotificationsPage: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 px-6 py-8">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Thông báo</h1>
-                <p className="text-gray-600">
-                    Quản lý thông báo và cập nhật từ hệ thống
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Notifications</h1>
+                <p className="text-gray-600 text-lg">
+                    Manage notifications and updates from the system
                 </p>
             </div>
 
             {notifications.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {notifications.map((notification: any) => (
-                        <div key={notification.id} className="p-4 bg-white border rounded-lg">
-                            <h4 className="font-medium text-gray-900">{notification.content?.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{notification.content?.message}</p>
-                            <p className="text-xs text-gray-500 mt-2">
-                                {new Date(notification.sentAt).toLocaleDateString('vi-VN')}
+                        <div key={notification.id} className="p-6 bg-white border rounded-xl shadow-lg">
+                            <h4 className="font-medium text-gray-900 text-lg mb-2">{notification.content?.title}</h4>
+                            <p className="text-sm text-gray-600 mb-3">{notification.content?.message}</p>
+                            <p className="text-xs text-gray-500">
+                                {new Date(notification.sentAt).toLocaleDateString('en-US')}
                             </p>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-12">
-                    <Bell className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Không có thông báo</h3>
-                    <p className="text-gray-500">
-                        Bạn chưa có thông báo nào. Chúng tôi sẽ thông báo khi có cập nhật mới.
+                <div className="text-center py-16 px-6">
+                    <Bell className="mx-auto h-16 w-16 text-gray-400 mb-6" />
+                    <h3 className="text-xl font-medium text-gray-900 mb-4">No Notifications</h3>
+                    <p className="text-gray-500 text-lg">
+                        You don't have any notifications yet. We'll notify you when there are new updates.
                     </p>
                 </div>
             )}

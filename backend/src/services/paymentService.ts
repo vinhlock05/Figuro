@@ -252,7 +252,7 @@ class VietnamesePaymentGateway {
             // VNPAY request parameters
             var date = new Date()
             const createDate = dateFormat(date, 'yyyymmddHHmmss');
-            const expireDate = dateFormat(date.getTime() + 15 * 60 * 1000, 'yyyymmddHHmmss')
+            const expireDate = dateFormat(new Date(date.getTime() + 15 * 60 * 1000), 'yyyymmddHHMMss');
             const orderInfo = request.description || 'Thanh toan don hang Figuro'
 
             // Ensure return URL is a valid absolute URL (VNPay will redirect to this URL)

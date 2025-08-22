@@ -58,7 +58,11 @@ export const placeOrder = async (userId: number, shippingAddress: string, paymen
     return order
 }
 
-export const getUserOrders = async (userId: number) => {
+export const getUserOrders = async (userId: number, query: any = {}) => {
+    const { page = 1, limit = 10 } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
     const orders = await prisma.order.findMany({
         where: { userId },
         include: {
@@ -66,15 +70,29 @@ export const getUserOrders = async (userId: number) => {
             statusHistory: true,
             payments: { orderBy: { createdAt: 'desc' }, take: 1 }
         },
-        orderBy: { createdAt: 'desc' }
-    })
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take
+    });
+
+    const total = await prisma.order.count({ where: { userId } });
 
     // Attach derived paymentStatus from latest payment (default to 'pending')
-    return orders.map((o: any) => ({
+    const ordersWithPaymentStatus = orders.map((o: any) => ({
         ...o,
         paymentStatus: o.payments && o.payments.length > 0 ? o.payments[0].status : 'pending'
-    }))
-}
+    }));
+
+    return {
+        orders: ordersWithPaymentStatus,
+        pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            pages: Math.ceil(total / Number(limit))
+        }
+    };
+};
 
 export const getOrderDetails = async (userId: number, orderId: number) => {
     const order = await prisma.order.findUnique({

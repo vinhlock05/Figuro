@@ -153,9 +153,9 @@ export const voiceOrderHelpers = {
                 };
             } else {
                 // Get recent orders
-                const orders = await customerService.getOrders();
+                const ordersResponse = await customerService.getOrders();
 
-                if (orders.length === 0) {
+                if (ordersResponse.orders.length === 0) {
                     return {
                         success: false,
                         message: 'Bạn chưa có đơn hàng nào. Bạn có muốn mua sắm không?',
@@ -163,14 +163,14 @@ export const voiceOrderHelpers = {
                     };
                 }
 
-                const recentOrder = orders[0];
+                const recentOrder = ordersResponse.orders[0];
                 const statusText = getOrderStatusText(recentOrder.status);
 
                 return {
                     success: true,
                     message: `Đơn hàng gần nhất ${recentOrder.id} đang ở trạng thái: ${statusText}. ` +
-                        `Bạn có ${orders.length} đơn hàng. Muốn xem chi tiết đơn hàng nào?`,
-                    data: orders.slice(0, 3), // Take only first 3 for voice response
+                        `Bạn có ${ordersResponse.orders.length} đơn hàng. Muốn xem chi tiết đơn hàng nào?`,
+                    data: ordersResponse.orders.slice(0, 3), // Take only first 3 for voice response
                     suggestedActions: [
                         'Xem chi tiết đơn hàng',
                         'Theo dõi giao hàng',
@@ -214,7 +214,7 @@ export const voiceOrderHelpers = {
 // Cart management for voice
 export const voiceCartHelpers = {
     // Add product to cart via voice
-    async addToCart(productName: string, quantity: number = 1): Promise<VoiceResponse> {
+    async addToCart(productName: string, quantity: number = 1, customizations?: Array<{ type: string; value: string }>): Promise<VoiceResponse> {
         try {
             const products = await customerService.getProducts({
                 search: productName,
@@ -239,11 +239,15 @@ export const voiceCartHelpers = {
                 };
             }
 
-            await customerService.addToCart(product.id.toString(), quantity);
+            await customerService.addToCart(product.id.toString(), quantity, customizations);
+
+            const customizationText = customizations && customizations.length > 0
+                ? ` với tùy chỉnh`
+                : '';
 
             return {
                 success: true,
-                message: `Đã thêm ${quantity} ${product.name} vào giỏ hàng với giá ${formatPrice(parseFloat(product.price) * quantity)}.`,
+                message: `Đã thêm ${quantity} ${product.name}${customizationText} vào giỏ hàng với giá ${formatPrice(parseFloat(product.price) * quantity)}.`,
                 data: product,
                 suggestedActions: ['Xem giỏ hàng', 'Tiếp tục mua sắm', 'Thanh toán ngay']
             };

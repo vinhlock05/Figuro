@@ -23,6 +23,7 @@ export interface VoiceResponse {
     response_text: string;
     audio_url?: string;
     processing_time_ms: number;
+    product_recommendations?: any[];
 }
 
 export interface TTSRequest {
@@ -38,6 +39,8 @@ export interface HealthResponse {
         speech_recognition: boolean;
         text_to_speech: boolean;
         nlp_processing: boolean;
+        chatbot_integration: boolean;
+        product_knowledge: boolean;
     };
 }
 
@@ -153,34 +156,76 @@ class VoiceService {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (SpeechRecognition) {
-            this.speechRecognition = new SpeechRecognition();
-            this.speechRecognition.continuous = false;
-            this.speechRecognition.interimResults = false;
-            this.speechRecognition.lang = 'vi-VN';
-            this.isSupported = true;
+            try {
+                this.speechRecognition = new SpeechRecognition();
+                this.speechRecognition.continuous = false;
+                this.speechRecognition.interimResults = false;
+                this.speechRecognition.lang = 'vi-VN';
+
+                // Test if speech recognition actually works
+                this.speechRecognition.onerror = (event: any) => {
+                    if (event.error === 'not-allowed') {
+                        console.warn('Microphone access denied');
+                        this.isSupported = false;
+                    }
+                };
+
+                this.isSupported = true;
+                console.log('Speech Recognition API initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize Speech Recognition:', error);
+                this.isSupported = false;
+            }
         } else {
-            console.warn('Speech Recognition API not supported in this browser - enabling text-only mode');
-            // Enable text-only mode for testing/demo
-            this.isSupported = true; // Allow voice agent to work with text input only
+            console.warn('Speech Recognition API not supported in this browser');
+            this.isSupported = false;
         }
     }
 
     // Check if voice features are supported
     public isVoiceSupported(): boolean {
+        // Additional check for microphone permissions
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.warn('Media devices not supported');
+            return false;
+        }
+
         return this.isSupported;
     }
 
-    // Start listening for voice input
-    public startListening(
+    // Check microphone permissions
+    public async checkMicrophonePermission(): Promise<boolean> {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            return true;
+        } catch (error) {
+            console.error('Microphone permission denied:', error);
+            return false;
+        }
+    }
+
+    // Start listening for voice input with better error handling
+    public async startListening(
         onResult: (transcript: string) => void,
         onError: (error: string) => void,
         language: string = 'vi-VN'
     ): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            // Check if speech recognition is available
             if (!this.speechRecognition) {
-                // For browsers without speech recognition, show helpful message
-                onError('Voice recognition không khả dụng. Hãy sử dụng text input.');
-                reject(new Error('Speech recognition not supported'));
+                const errorMsg = 'Voice recognition không khả dụng trong browser này. Hãy sử dụng text input.';
+                onError(errorMsg);
+                reject(new Error(errorMsg));
+                return;
+            }
+
+            // Check microphone permissions
+            const hasPermission = await this.checkMicrophonePermission();
+            if (!hasPermission) {
+                const errorMsg = 'Cần cấp quyền microphone để sử dụng voice input.';
+                onError(errorMsg);
+                reject(new Error(errorMsg));
                 return;
             }
 
@@ -189,27 +234,53 @@ class VoiceService {
                 return;
             }
 
-            this.speechRecognition.lang = language;
-            this.isListening = true;
+            try {
+                this.speechRecognition.lang = language;
+                this.isListening = true;
 
-            this.speechRecognition.onresult = (event: SpeechRecognitionEvent) => {
-                const transcript = event.results[0][0].transcript;
-                onResult(transcript);
+                this.speechRecognition.onresult = (event: SpeechRecognitionEvent) => {
+                    const transcript = event.results[0][0].transcript;
+                    onResult(transcript);
+                    this.isListening = false;
+                    resolve();
+                };
+
+                this.speechRecognition.onerror = (event: any) => {
+                    this.isListening = false;
+                    let errorMessage = 'Speech recognition error';
+
+                    switch (event.error) {
+                        case 'not-allowed':
+                            errorMessage = 'Microphone access bị từ chối. Hãy cấp quyền microphone.';
+                            break;
+                        case 'no-speech':
+                            errorMessage = 'Không nghe thấy giọng nói. Hãy thử lại.';
+                            break;
+                        case 'audio-capture':
+                            errorMessage = 'Không thể truy cập microphone. Hãy kiểm tra thiết bị.';
+                            break;
+                        case 'network':
+                            errorMessage = 'Lỗi kết nối mạng. Hãy kiểm tra internet.';
+                            break;
+                        default:
+                            errorMessage = `Lỗi voice recognition: ${event.error}`;
+                    }
+
+                    onError(errorMessage);
+                    reject(new Error(errorMessage));
+                };
+
+                this.speechRecognition.onend = () => {
+                    this.isListening = false;
+                };
+
+                this.speechRecognition.start();
+            } catch (error) {
                 this.isListening = false;
-                resolve();
-            };
-
-            this.speechRecognition.onerror = (event: any) => {
-                this.isListening = false;
-                onError(`Speech recognition error: ${event.error}`);
-                reject(new Error(event.error));
-            };
-
-            this.speechRecognition.onend = () => {
-                this.isListening = false;
-            };
-
-            this.speechRecognition.start();
+                const errorMsg = 'Không thể khởi động voice recognition. Hãy thử lại.';
+                onError(errorMsg);
+                reject(new Error(errorMsg));
+            }
         });
     }
 
@@ -251,157 +322,231 @@ class VoiceService {
         }
     }
 
-    // Process text through voice agent (for typing instead of speaking)
-    public async processTextInput(
-        text: string,
-        language: string = 'vi-VN'
-    ): Promise<VoiceResponse> {
+    // Process text input via voice agent API
+    public async processTextInput(text: string, language: string = 'vi-VN'): Promise<VoiceResponse> {
         try {
-            // Try API first
             const response = await axios.post(`${VOICE_API_BASE_URL}/voice/process-text`, {
                 text,
                 language,
                 enable_tts: true
             });
 
-            const apiResult: VoiceResponse = response.data;
-
-            // If API is uncertain, run enhanced client processing and prefer a better intent
-            if (apiResult.intent === 'unknown' || (apiResult.confidence !== undefined && apiResult.confidence < 0.6)) {
-                try {
-                    const enhanced = await this.enhancedTextProcessing(text);
-                    // Prefer enhanced if it found a concrete intent
-                    if (enhanced.intent !== 'unknown') {
-                        return { ...enhanced, audio_url: apiResult.audio_url };
-                    }
-                } catch { }
+            if (response.data) {
+                return {
+                    transcript: response.data.transcript || text,
+                    intent: response.data.intent || 'unknown',
+                    entities: response.data.entities || [],
+                    confidence: response.data.confidence || 0.8,
+                    response_text: response.data.response_text || this.generateResponse('unknown', []),
+                    audio_url: response.data.audio_url,
+                    processing_time_ms: response.data.processing_time_ms || 100
+                };
             }
 
-            return apiResult;
+            // Fallback to local processing if API fails
+            return this.processTextLocally(text);
         } catch (error) {
-            // Fallback to enhanced processing with customer service integration
-            try {
-                return await this.enhancedTextProcessing(text);
-            } catch (enhancedError) {
-                // Final fallback to basic mock processing
-                return this.mockTextProcessing(text);
-            }
+            console.error('Voice agent API error:', error);
+            // Fallback to local processing
+            return this.processTextLocally(text);
         }
     }
 
-    // Enhanced text processing with voice helpers integration
-    private async enhancedTextProcessing(text: string): Promise<VoiceResponse> {
-        const normalized = text
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/\p{Diacritic}+/gu, '');
-        // Primary extraction with original text to preserve Vietnamese diacritics
-        let intent = this._extractIntent(text);
-        let entities = this._extractEntities(text);
-        // If unknown, retry with normalized text to increase recall
-        if (intent === 'unknown') {
-            intent = this._extractIntent(normalized);
-            if (entities.length === 0) {
-                entities = this._extractEntities(normalized);
-            }
-        }
-
-        // Import voice helpers dynamically to avoid circular dependencies
-        const { voiceProductHelpers, voiceOrderHelpers, voiceCartHelpers } = await import('./voiceHelpers');
-
-        let response_text = '';
-        let confidence = 0.8;
-
+    // Process audio file via voice agent API
+    public async processAudioFile(audioBlob: Blob, language: string = 'vi-VN'): Promise<VoiceResponse> {
         try {
-            switch (intent) {
-                case 'create_order':
-                    const productEntity = entities.find((e: Entity) => e.type === 'product');
-                    if (productEntity) {
-                        const result = await voiceCartHelpers.addToCart(productEntity.value);
-                        response_text = result.message;
-                        confidence = result.success ? 0.9 : 0.6;
-                    } else {
-                        response_text = 'Tôi có thể giúp bạn đặt hàng. Bạn muốn mua sản phẩm gì?';
-                    }
-                    break;
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'audio.wav');
+            formData.append('language', language);
+            formData.append('enable_tts', 'true');
 
-                case 'check_order_status':
-                    const result = await voiceOrderHelpers.checkOrderStatus();
-                    response_text = result.message;
-                    confidence = result.success ? 0.9 : 0.6;
-                    break;
-
-                case 'get_product_info':
-                    const productName = entities.find((e: Entity) => e.type === 'product')?.value ||
-                        text.replace(/.*(?:thông tin|info|chi tiết).*?về\s*/i, '').trim();
-                    if (productName) {
-                        const productResult = await voiceProductHelpers.getProductInfo(productName);
-                        response_text = productResult.message;
-                        confidence = productResult.success ? 0.9 : 0.6;
-                    } else {
-                        const recommendations = await voiceProductHelpers.getRecommendations();
-                        response_text = recommendations.message;
-                    }
-                    break;
-
-                default:
-                    response_text = this.generateResponse(intent, entities);
-            }
-        } catch (error) {
-            console.error('Enhanced processing error:', error);
-            response_text = this.generateResponse(intent, entities);
-        }
-
-        return {
-            transcript: text,
-            intent,
-            entities,
-            confidence,
-            response_text,
-            processing_time_ms: 200
-        };
-    }
-
-    // Mock text processing when API is not available
-    private mockTextProcessing(text: string): VoiceResponse {
-        const lowerText = text.toLowerCase();
-        let intent: VoiceResponse['intent'] = 'unknown';
-        const entities: Entity[] = [];
-
-        // Simple intent detection
-        if (lowerText.includes('đặt') || lowerText.includes('mua') || lowerText.includes('order')) {
-            intent = 'create_order';
-        } else if (lowerText.includes('hủy') || lowerText.includes('cancel')) {
-            intent = 'cancel_order';
-        } else if (lowerText.includes('kiểm tra') || lowerText.includes('trạng thái') || lowerText.includes('status')) {
-            intent = 'check_order_status';
-        } else if (lowerText.includes('thông tin') || lowerText.includes('chi tiết') || lowerText.includes('info')) {
-            intent = 'get_product_info';
-        } else if (lowerText.includes('chào') || lowerText.includes('hello') || lowerText.includes('hi')) {
-            intent = 'greeting';
-        } else if (lowerText.includes('tạm biệt') || lowerText.includes('bye') || lowerText.includes('goodbye')) {
-            intent = 'goodbye';
-        }
-
-        // Simple entity extraction
-        const productMatch = text.match(/(?:mô hình|figure|model)\s+([A-Za-z\s]+)/i);
-        if (productMatch) {
-            entities.push({
-                type: 'product',
-                value: productMatch[1].trim(),
-                confidence: 0.8
+            const response = await axios.post(`${VOICE_API_BASE_URL}/voice/process`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                timeout: 30000, // 30 seconds for audio processing
             });
+
+            if (response.data) {
+                return {
+                    transcript: response.data.transcript || '',
+                    intent: response.data.intent || 'unknown',
+                    entities: response.data.entities || [],
+                    confidence: response.data.confidence || 0.8,
+                    response_text: response.data.response_text || this.generateResponse('unknown', []),
+                    audio_url: response.data.audio_url,
+                    processing_time_ms: response.data.processing_time_ms || 100
+                };
+            }
+
+            throw new Error('Invalid response from voice agent API');
+        } catch (error) {
+            console.error('Audio processing API error:', error);
+            throw new Error('Failed to process audio file');
         }
+    }
+
+    // Get product recommendations via voice agent
+    public async getProductRecommendations(intent?: string, category?: string, priceMax?: number): Promise<any[]> {
+        try {
+            const params: any = {};
+            if (intent) params.intent = intent;
+            if (category) params.category = category;
+            if (priceMax) params.price_max = priceMax;
+
+            const response = await axios.get(`${VOICE_API_BASE_URL}/voice/products/recommendations`, { params });
+            return response.data.recommendations || [];
+        } catch (error) {
+            console.error('Product recommendations API error:', error);
+            return [];
+        }
+    }
+
+    // Search products via voice agent
+    public async searchProductsByVoice(query: string, category?: string, priceRange?: string, limit: number = 10): Promise<any> {
+        try {
+            const params: any = { query, limit };
+            if (category) params.category = category;
+            if (priceRange) params.price_range = priceRange;
+
+            const response = await axios.get(`${VOICE_API_BASE_URL}/voice/products/search`, { params });
+            return response.data;
+        } catch (error) {
+            console.error('Voice product search API error:', error);
+            return { products: [], total_found: 0 };
+        }
+    }
+
+    // Get product categories via voice agent
+    public async getProductCategories(): Promise<any[]> {
+        try {
+            const response = await axios.get(`${VOICE_API_BASE_URL}/voice/products/categories`);
+            return response.data.categories || [];
+        } catch (error) {
+            console.error('Product categories API error:', error);
+            return [];
+        }
+    }
+
+    // Query chatbot via voice agent
+    public async queryChatbot(text: string, language: string = 'vi-VN'): Promise<any> {
+        try {
+            const response = await axios.post(`${VOICE_API_BASE_URL}/voice/chatbot/query`, null, {
+                params: { text, language }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Chatbot query API error:', error);
+            return {};
+        }
+    }
+
+    // Stream voice response for real-time interaction
+    public async streamVoiceResponse(query: string, language: string = 'vi-VN'): Promise<any> {
+        try {
+            const response = await axios.get(`${VOICE_API_BASE_URL}/voice/stream`, {
+                params: { query, language }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Voice streaming API error:', error);
+            return {};
+        }
+    }
+
+    // Check voice agent health with enhanced status
+    public async getHealthStatus(): Promise<HealthResponse> {
+        try {
+            const response = await axios.get(`${VOICE_API_BASE_URL}/voice/health`);
+            return {
+                status: response.data.status || 'unknown',
+                version: response.data.version || '1.0.0',
+                services: {
+                    speech_recognition: true,
+                    text_to_speech: true,
+                    nlp_processing: true,
+                    chatbot_integration: true,
+                    product_knowledge: true
+                }
+            };
+        } catch (error) {
+            console.error('Health check error:', error);
+            throw new Error('Failed to check voice agent health');
+        }
+    }
+
+    // Get supported languages
+    public async getSupportedLanguages(): Promise<SupportedLanguage[]> {
+        try {
+            const response = await axios.get(`${VOICE_API_BASE_URL}/voice/supported-languages`);
+            return response.data.languages;
+        } catch (error) {
+            console.error('Languages error:', error);
+            // Return default languages if API fails
+            return [
+                { code: 'vi-VN', name: 'Tiếng Việt' },
+                { code: 'en-US', name: 'English (US)' },
+                { code: 'ja-JP', name: 'Japanese' }
+            ];
+        }
+    }
+
+    // Record audio from microphone
+    public async recordAudio(duration: number = 5000): Promise<Blob> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                const audioChunks: Blob[] = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    stream.getTracks().forEach(track => track.stop());
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    resolve(audioBlob);
+                };
+
+                mediaRecorder.onerror = (_event) => {
+                    console.error('Recording error:', _event);
+                    stream.getTracks().forEach(track => track.stop());
+                    reject(new Error('Recording failed'));
+                };
+
+                mediaRecorder.start();
+
+                // Stop recording after specified duration
+                setTimeout(() => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, duration);
+
+            } catch (error) {
+                console.error('Microphone access error:', error);
+                reject(new Error('Failed to access microphone'));
+            }
+        });
+    }
+
+
+    // Fallback local text processing when API is unavailable
+    private processTextLocally(text: string): VoiceResponse {
+        const intent = this._extractIntent(text);
+        const entities = this._extractEntities(text);
 
         return {
             transcript: text,
             intent,
             entities,
-            confidence: 0.8,
+            confidence: 0.6, // Lower confidence for local processing
             response_text: this.generateResponse(intent, entities),
-            processing_time_ms: 100
+            processing_time_ms: 50
         };
     }
+
 
     // Generate response based on intent
     private generateResponse(intent: VoiceResponse['intent'], _entities: Entity[]): string {
@@ -529,73 +674,6 @@ class VoiceService {
             audio.onerror = () => reject(new Error('Failed to play audio'));
 
             audio.play().catch(reject);
-        });
-    }
-
-    // Get voice agent health status
-    public async getHealthStatus(): Promise<HealthResponse> {
-        try {
-            const response = await axios.get(`${VOICE_API_BASE_URL}/voice/health`);
-            return response.data;
-        } catch (error) {
-            console.error('Health check error:', error);
-            throw new Error('Failed to check voice agent health');
-        }
-    }
-
-    // Get supported languages
-    public async getSupportedLanguages(): Promise<SupportedLanguage[]> {
-        try {
-            const response = await axios.get(`${VOICE_API_BASE_URL}/voice/supported-languages`);
-            return response.data.languages;
-        } catch (error) {
-            console.error('Languages error:', error);
-            // Return default languages if API fails
-            return [
-                { code: 'vi-VN', name: 'Tiếng Việt' },
-                { code: 'en-US', name: 'English (US)' },
-                { code: 'ja-JP', name: 'Japanese' }
-            ];
-        }
-    }
-
-    // Record audio from microphone
-    public async recordAudio(duration: number = 5000): Promise<Blob> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const mediaRecorder = new MediaRecorder(stream);
-                const audioChunks: Blob[] = [];
-
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = () => {
-                    stream.getTracks().forEach(track => track.stop());
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    resolve(audioBlob);
-                };
-
-                mediaRecorder.onerror = (_event) => {
-                    console.error('Recording error:', _event);
-                    stream.getTracks().forEach(track => track.stop());
-                    reject(new Error('Recording failed'));
-                };
-
-                mediaRecorder.start();
-
-                // Stop recording after specified duration
-                setTimeout(() => {
-                    if (mediaRecorder.state === 'recording') {
-                        mediaRecorder.stop();
-                    }
-                }, duration);
-
-            } catch (error) {
-                console.error('Microphone access error:', error);
-                reject(new Error('Failed to access microphone'));
-            }
         });
     }
 }

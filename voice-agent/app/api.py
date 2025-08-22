@@ -52,9 +52,17 @@ async def process_text(request: VoiceProcessRequest):
         confidence = voice_service._calculate_confidence(
             request.text, intent, entities)
 
-        # Generate response
-        response_text = voice_service._generate_response(
-            intent, entities, request.text)
+        # Query chatbot for intelligent response
+        chatbot_response = await voice_service.query_chatbot(request.text, request.language.value)
+
+        # Get product recommendations if relevant
+        product_recommendations = []
+        if intent in ["get_product_info", "search_products"]:
+            product_recommendations = await voice_service.get_product_recommendations(intent, entities)
+
+        # Generate enhanced response
+        response_text = voice_service._generate_enhanced_response(
+            intent, entities, request.text, chatbot_response, product_recommendations)
 
         # Generate TTS audio if requested
         audio_url = None
@@ -68,7 +76,8 @@ async def process_text(request: VoiceProcessRequest):
             confidence=confidence,
             response_text=response_text,
             audio_url=audio_url,
-            processing_time_ms=0  # No processing time for text input
+            processing_time_ms=0,  # No processing time for text input
+            product_recommendations=product_recommendations
         )
     except Exception as e:
         raise HTTPException(
@@ -150,3 +159,157 @@ async def cleanup_audio_files():
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Cleanup failed: {str(e)}")
+
+
+@router.get("/products/search")
+async def search_products_by_voice(
+    query: str,
+    category: str = None,
+    price_range: str = None,
+    limit: int = 10
+):
+    """
+    Search products using voice-based queries
+    """
+    try:
+        # Extract entities from the voice query
+        entities = voice_service._extract_entities(query)
+
+        # Get product recommendations
+        recommendations = await voice_service.get_product_recommendations("search_products", entities)
+
+        # Apply additional filters
+        if category:
+            recommendations = [p for p in recommendations if p.get(
+                'category', {}).get('name', '').lower() == category.lower()]
+
+        if price_range:
+            recommendations = [p for p in recommendations if voice_service._matches_price_range(
+                p.get('price', 0), price_range)]
+
+        return {
+            "query": query,
+            "products": recommendations[:limit],
+            "total_found": len(recommendations),
+            "filters_applied": {
+                "category": category,
+                "price_range": price_range,
+                "limit": limit
+            }
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Product search failed: {str(e)}")
+
+
+@router.get("/products/categories")
+async def get_product_categories():
+    """
+    Get all available product categories
+    """
+    try:
+        await voice_service.refresh_product_cache()
+        categories = list(voice_service.category_cache.values())
+        return {
+            "categories": categories,
+            "total": len(categories)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch categories: {str(e)}")
+
+
+@router.get("/products/recommendations")
+async def get_voice_recommendations(
+    intent: str = None,
+    category: str = None,
+    price_max: float = None
+):
+    """
+    Get product recommendations based on voice intent and preferences
+    """
+    try:
+        # Create mock entities for recommendation
+        entities = []
+        if category:
+            entities.append(voice_service.Entity(
+                type="category", value=category, confidence=0.9))
+        if price_max:
+            entities.append(voice_service.Entity(
+                type="price_range", value=f"under_{price_max}", confidence=0.8))
+
+        recommendations = await voice_service.get_product_recommendations(
+            intent or "get_product_info",
+            entities
+        )
+
+        return {
+            "intent": intent,
+            "filters": {"category": category, "price_max": price_max},
+            "recommendations": recommendations,
+            "total": len(recommendations)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get recommendations: {str(e)}")
+
+
+@router.post("/chatbot/query")
+async def query_chatbot_via_voice(
+    text: str,
+    language: str = "vi-VN"
+):
+    """
+    Query the chatbot service via voice agent
+    """
+    try:
+        response = await voice_service.query_chatbot(text, language)
+        return {
+            "query": text,
+            "language": language,
+            "response": response
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Chatbot query failed: {str(e)}")
+
+
+@router.get("/voice/stream")
+async def stream_voice_response(
+    query: str,
+    language: SupportedLanguage = SupportedLanguage.VIETNAMESE
+):
+    """
+    Stream voice response for real-time interaction
+    """
+    try:
+        # Process the query
+        intent = voice_service._extract_intent(query)
+        entities = voice_service._extract_entities(query)
+
+        # Get chatbot response
+        chatbot_response = await voice_service.query_chatbot(query, language.value)
+
+        # Get product recommendations
+        product_recommendations = await voice_service.get_product_recommendations(intent, entities)
+
+        # Generate response
+        response_text = voice_service._generate_enhanced_response(
+            intent, entities, query, chatbot_response, product_recommendations
+        )
+
+        return {
+            "query": query,
+            "intent": intent,
+            "response": response_text,
+            "products": product_recommendations[:3],  # Top 3 for voice
+            "suggested_actions": [
+                "Tìm kiếm sản phẩm tương tự",
+                "Xem danh mục",
+                "Kiểm tra giá cả",
+                "Đặt hàng"
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Voice streaming failed: {str(e)}")

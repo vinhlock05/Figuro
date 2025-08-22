@@ -9,10 +9,12 @@ export const list = async (req: Request, res: Response) => {
             limit = 20,
             search,
             categoryId,
+            category,
             minPrice,
             maxPrice,
             inStock,
-            customizable
+            customizable,
+            sort
         } = req.query
 
         const skip = (Number(page) - 1) * Number(limit)
@@ -31,6 +33,10 @@ export const list = async (req: Request, res: Response) => {
             where.categoryId = Number(categoryId)
         }
 
+        if (category) {
+            where.category = { name: { contains: category as string, mode: 'insensitive' } }
+        }
+
         if (minPrice || maxPrice) {
             where.price = {}
             if (minPrice) where.price.gte = Number(minPrice)
@@ -45,6 +51,29 @@ export const list = async (req: Request, res: Response) => {
             where.isCustomizable = true
         }
 
+        // Build orderBy clause
+        let orderBy: any = { createdAt: 'desc' }
+
+        if (sort) {
+            switch (sort) {
+                case 'price-low':
+                    orderBy = { price: 'asc' }
+                    break
+                case 'price-high':
+                    orderBy = { price: 'desc' }
+                    break
+                case 'newest':
+                    orderBy = { createdAt: 'desc' }
+                    break
+                case 'popularity':
+                    // You can implement popularity logic here
+                    orderBy = { createdAt: 'desc' }
+                    break
+                default:
+                    orderBy = { createdAt: 'desc' }
+            }
+        }
+
         const [products, total] = await Promise.all([
             prisma.product.findMany({
                 where,
@@ -56,7 +85,7 @@ export const list = async (req: Request, res: Response) => {
                 },
                 skip,
                 take: Number(limit),
-                orderBy: { createdAt: 'desc' }
+                orderBy
             }),
             prisma.product.count({ where })
         ])
