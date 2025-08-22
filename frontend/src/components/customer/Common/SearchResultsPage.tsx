@@ -497,6 +497,8 @@ const SearchResultsPage: React.FC = () => {
 
             {/* Toast Message */}
             <ToastMessage
+                id="search-results-toast"
+                title={toast.type === 'success' ? 'Success' : 'Error'}
                 open={toast.open}
                 type={toast.type}
                 message={toast.message}

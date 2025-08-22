@@ -224,6 +224,8 @@ export const OrdersManagement: React.FC = () => {
                 onCancel={() => setDeleteDialog({ open: false, orderId: null })}
             />
             <ToastMessage
+                id="order-toast"
+                title={toast.type === 'success' ? 'Success' : 'Error'}
                 open={toast.open}
                 type={toast.type}
                 message={toast.message}

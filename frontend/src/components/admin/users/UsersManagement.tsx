@@ -156,6 +156,8 @@ export const UsersManagement: React.FC = () => {
                 onCancel={() => setConfirmDialog({ open: false, userId: null })}
             />
             <ToastMessage
+                id="user-toast"
+                title={toast.type === 'success' ? 'Success' : 'Error'}
                 open={toast.open}
                 type={toast.type}
                 message={toast.message}

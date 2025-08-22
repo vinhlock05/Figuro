@@ -200,6 +200,8 @@ export const ProductsManagement: React.FC = () => {
                 onCancel={() => setConfirmDialog({ open: false, productId: null })}
             />
             <ToastMessage
+                id="product-toast"
+                title={toast.type === 'success' ? 'Success' : 'Error'}
                 open={toast.open}
                 type={toast.type}
                 message={toast.message}

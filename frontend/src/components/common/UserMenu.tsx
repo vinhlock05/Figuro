@@ -88,6 +88,8 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 onCancel={() => setConfirmOpen(false)}
             />
             <ToastMessage
+                id="user-menu-toast"
+                title={toast.type === 'success' ? 'Success' : 'Error'}
                 open={toast.open}
                 type={toast.type}
                 message={toast.message}

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock, Sparkles, User, Shield, ArrowLeft, Clock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Sparkles, User, ArrowLeft } from 'lucide-react';
 import { OAuthButtons } from './OAuthButtons';
 
 const loginSchema = yup.object({

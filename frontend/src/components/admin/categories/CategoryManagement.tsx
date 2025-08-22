@@ -114,6 +114,8 @@ const CategoryManagement: React.FC = () => {
                 onCancel={() => setConfirmDialog({ open: false, categoryId: null })}
             />
             <ToastMessage
+                id="category-toast"
+                title={toast.type === 'success' ? 'Success' : 'Error'}
                 open={toast.open}
                 type={toast.type}
                 message={toast.message}

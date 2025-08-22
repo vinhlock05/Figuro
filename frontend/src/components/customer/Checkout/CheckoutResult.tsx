@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { customerService } from '../../../services/customerService';
-import {
-    CheckCircle,
-    XCircle,
-    Clock,
-    Package,
-    Truck,
-    Home,
-    ShoppingBag
-} from 'lucide-react';
 
 const useQuery = () => {
     const [searchParams] = useSearchParams();

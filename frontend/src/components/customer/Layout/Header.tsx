@@ -4,7 +4,6 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useCart } from '../../../contexts/CartContext';
 import { customerService } from '../../../services/customerService';
 import type { Product } from '../../../services/customerService';
-import { formatVND } from '../../../utils/currency';
 import {
     Search,
     ShoppingCart,
@@ -15,7 +14,6 @@ import {
     Moon,
     ChevronDown,
     ShoppingBag,
-    Home,
     BarChart3,
     Package,
     LogOut
@@ -27,7 +25,6 @@ const Header: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [notificationCount, setNotificationCount] = useState(0);
     const [wishlistCount, setWishlistCount] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchSuggestions, setSearchSuggestions] = useState<Product[]>([]);
@@ -53,8 +50,6 @@ const Header: React.FC = () => {
                     customerService.getWishlist()
                 ]);
 
-                const unreadCount = notifications.filter(n => !n.read).length;
-                setNotificationCount(unreadCount);
                 setWishlistCount(wishlist.length);
                 setNotifications(notifications);
             } catch (error) {
@@ -93,6 +88,33 @@ const Header: React.FC = () => {
         const timeoutId = setTimeout(loadSearchSuggestions, 300);
         return () => clearTimeout(timeoutId);
     }, [searchQuery]);
+
+    // Handle click outside to close dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+
+            // Close search suggestions
+            if (!target.closest('.search-container')) {
+                setShowSuggestions(false);
+            }
+
+            // Close user menu
+            if (!target.closest('.user-menu-container')) {
+                setShowUserMenu(false);
+            }
+
+            // Close notifications
+            if (!target.closest('.notifications-container')) {
+                setShowNotifications(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -144,16 +166,48 @@ const Header: React.FC = () => {
 
                     {/* Search Bar */}
                     <div className="flex-1 max-w-2xl mx-8">
-                        <div className="relative">
+                        <form onSubmit={handleSearch} className="relative search-container">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <Search className="h-5 w-5 text-neutral-400" />
                             </div>
                             <input
                                 type="text"
                                 placeholder="Search products..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-12 pr-4 py-3 border-2 border-neutral-200 dark:border-neutral-600 rounded-xl bg-neutral-50 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:border-brand focus:ring-brand focus:bg-white dark:focus:bg-neutral-800 transition-all duration-200"
                             />
-                        </div>
+                            {/* Search Suggestions */}
+                            {showSuggestions && searchSuggestions.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-neutral-800 rounded-xl border-2 border-neutral-200 dark:border-neutral-600 shadow-xl z-50 max-h-64 overflow-y-auto">
+                                    {searchSuggestions.map((product) => (
+                                        <Link
+                                            key={product.id}
+                                            to={`/products/${product.id}`}
+                                            onClick={() => {
+                                                setShowSuggestions(false);
+                                                setSearchQuery('');
+                                            }}
+                                            className="block p-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 border-b border-neutral-100 dark:border-neutral-600 last:border-b-0 transition-colors"
+                                        >
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-600 rounded-lg flex items-center justify-center">
+                                                    <Package className="h-5 w-5 text-neutral-400" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                                                        {product.name}
+                                                    </p>
+                                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                                        {product.category?.name}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </form>
                     </div>
 
                     {/* Action Buttons */}
@@ -182,7 +236,7 @@ const Header: React.FC = () => {
                         {/* Notifications */}
                         <button
                             onClick={() => setShowNotifications(!showNotifications)}
-                            className="p-3 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-xl transition-all duration-200 relative"
+                            className="p-3 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-xl transition-all duration-200 relative notifications-container"
                         >
                             <Bell className="h-5 w-5" />
                             {unreadNotifications > 0 && (
@@ -207,7 +261,7 @@ const Header: React.FC = () => {
 
                         {/* User Menu */}
                         {user ? (
-                            <div className="relative">
+                            <div className="relative user-menu-container">
                                 <button
                                     onClick={() => setShowUserMenu(!showUserMenu)}
                                     className="flex items-center space-x-2 p-2 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-xl transition-all duration-200"
@@ -297,7 +351,7 @@ const Header: React.FC = () => {
 
             {/* Notifications Panel */}
             {showNotifications && (
-                <div className="absolute right-4 top-full mt-2 w-80 bg-white dark:bg-neutral-800 rounded-2xl border-2 border-neutral-100 dark:border-neutral-700 shadow-3xl z-50">
+                <div className="absolute right-4 top-full mt-2 w-80 bg-white dark:bg-neutral-800 rounded-2xl border-2 border-neutral-100 dark:border-neutral-700 shadow-3xl z-50 notifications-container">
                     <div className="p-4 border-b-2 border-neutral-100 dark:border-neutral-700">
                         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Notifications</h3>
                     </div>

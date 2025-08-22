@@ -7,11 +7,7 @@ import {
     Package,
     Clock,
     CheckCircle,
-    AlertCircle,
-    Truck,
     ArrowLeft,
-    DollarSign,
-    MapPin,
 } from 'lucide-react';
 import ToastMessage from '../../common/ToastMessage';
 
@@ -19,7 +15,6 @@ const OrderDetailPage: React.FC = () => {
     const { orderId } = useParams<{ orderId: string }>();
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
-    const [processingPayment, setProcessingPayment] = useState<boolean>(false);
     const [toast, setToast] = useState({ open: false, type: 'info' as 'success' | 'error' | 'info', message: '', title: '' });
 
     useEffect(() => {
@@ -40,96 +35,10 @@ const OrderDetailPage: React.FC = () => {
         }
     };
 
-    const getOrderStatusIcon = (status: string) => {
-        switch (status) {
-            case 'confirmed':
-                return <CheckCircle className="h-6 w-6 text-blue-500" />;
-            case 'delivered':
-                return <CheckCircle className="h-6 w-6 text-green-500" />;
-            case 'shipped':
-                return <Truck className="h-6 w-6 text-blue-500" />;
-            case 'processing':
-                return <Clock className="h-6 w-6 text-yellow-500" />;
-            case 'cancelled':
-                return <AlertCircle className="h-6 w-6 text-red-500" />;
-            case 'refunded':
-                return <AlertCircle className="h-6 w-6 text-orange-500" />;
-            default:
-                return <Package className="h-6 w-6 text-gray-500" />;
-        }
-    };
 
-    const getOrderStatusColor = (status: string) => {
-        switch (status) {
-            case 'confirmed':
-                return 'bg-blue-100 text-blue-800';
-            case 'delivered':
-                return 'bg-green-100 text-green-800';
-            case 'shipped':
-                return 'bg-blue-100 text-blue-800';
-            case 'processing':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'cancelled':
-                return 'bg-red-100 text-red-800';
-            case 'refunded':
-                return 'bg-orange-100 text-orange-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
 
-    const getOrderStatusText = (status: string) => {
-        switch (status) {
-            case 'pending':
-                return 'Pending';
-            case 'confirmed':
-                return 'Confirmed';
-            case 'processing':
-                return 'Processing';
-            case 'shipped':
-                return 'Shipped';
-            case 'delivered':
-                return 'Delivered';
-            case 'cancelled':
-                return 'Cancelled';
-            case 'refunded':
-                return 'Refunded';
-            default:
-                return status;
-        }
-    };
 
-    const getPaymentStatusText = (status: string) => {
-        switch (status) {
-            case 'paid':
-                return 'Paid';
-            case 'pending':
-                return 'Pending Payment';
-            case 'failed':
-                return 'Payment Failed';
-            default:
-                return status;
-        }
-    };
 
-    const handlePayAgain = async () => {
-        if (!order) return;
-        if (order.paymentMethod === 'cod') return;
-        try {
-            setProcessingPayment(true);
-            const result = await customerService.createPayment(order.id, order.paymentMethod as string);
-            if (result.success && result.paymentUrl) {
-                const redirectUrl = result.paymentUrl as string;
-                window.location.href = redirectUrl;
-            } else {
-                setProcessingPayment(false);
-                console.error('Recreate payment failed:', result.error || 'unknown_error');
-            }
-        } catch (error) {
-            setProcessingPayment(false);
-            console.error('Recreate payment error:', error);
-        }
-    };
 
     const handleCancelOrder = async () => {
         if (!order) return;

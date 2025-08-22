@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Mail, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface OTPVerificationProps {
     email: string;

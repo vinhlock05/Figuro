@@ -5,13 +5,6 @@ import type { Order } from '../../../services/customerService';
 import { formatVND } from '../../../utils/currency';
 import {
     Package,
-    Clock,
-    CheckCircle,
-    AlertCircle,
-    Truck,
-    Eye,
-    Calendar,
-    DollarSign,
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
@@ -20,7 +13,6 @@ import ToastMessage from '../../common/ToastMessage';
 const OrdersPage: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedStatus, setSelectedStatus] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [sortBy, setSortBy] = useState('createdAt');
@@ -77,77 +69,9 @@ const OrdersPage: React.FC = () => {
         }
     };
 
-    const getOrderStatusIcon = (status: string) => {
-        switch (status) {
-            case 'confirmed':
-                return <CheckCircle className="h-6 w-6 text-blue-500" />;
-            case 'delivered':
-                return <CheckCircle className="h-6 w-6 text-green-500" />;
-            case 'shipped':
-                return <Truck className="h-6 w-6 text-blue-500" />;
-            case 'processing':
-                return <Clock className="h-6 w-6 text-yellow-500" />;
-            case 'cancelled':
-                return <AlertCircle className="h-6 w-6 text-red-500" />;
-            case 'refunded':
-                return <AlertCircle className="h-6 w-6 text-orange-500" />;
-            default:
-                return <Package className="h-6 w-6 text-gray-500" />;
-        }
-    };
 
-    const getOrderStatusColor = (status: string) => {
-        switch (status) {
-            case 'confirmed':
-                return 'bg-blue-100 text-blue-800';
-            case 'delivered':
-                return 'bg-green-100 text-green-800';
-            case 'shipped':
-                return 'bg-blue-100 text-blue-800';
-            case 'processing':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'cancelled':
-                return 'bg-red-100 text-red-800';
-            case 'refunded':
-                return 'bg-orange-100 text-orange-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
 
-    const getOrderStatusText = (status: string) => {
-        switch (status) {
-            case 'pending':
-                return 'Pending';
-            case 'confirmed':
-                return 'Confirmed';
-            case 'processing':
-                return 'Processing';
-            case 'shipped':
-                return 'Shipped';
-            case 'delivered':
-                return 'Delivered';
-            case 'cancelled':
-                return 'Cancelled';
-            case 'refunded':
-                return 'Refunded';
-            default:
-                return status;
-        }
-    };
 
-    const getPaymentStatusColor = (status: string) => {
-        switch (status) {
-            case 'paid':
-                return 'bg-green-100 text-green-800';
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'failed':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
 
     const filteredOrders = orders.filter(order => {
         const matchesSearch =

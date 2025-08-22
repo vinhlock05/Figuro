@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Shield, ArrowLeft } from 'lucide-react';
 
 const registerSchema = yup.object({
     name: yup

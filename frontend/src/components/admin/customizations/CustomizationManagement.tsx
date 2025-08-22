@@ -203,6 +203,8 @@ const CustomizationManagement: React.FC = () => {
                 onCancel={() => setConfirmDialog({ open: false, customizationId: null })}
             />
             <ToastMessage
+                id="customization-toast"
+                title={toast.type === 'success' ? 'Success' : 'Error'}
                 open={toast.open}
                 type={toast.type}
                 message={toast.message}

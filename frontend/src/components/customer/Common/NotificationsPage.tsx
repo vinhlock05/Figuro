@@ -73,6 +73,8 @@ const NotificationsPage: React.FC = () => {
             )}
 
             <ToastMessage
+                id="notifications-toast"
+                title={toast.type === 'success' ? 'Success' : 'Error'}
                 open={toast.open}
                 type={toast.type}
                 message={toast.message}
