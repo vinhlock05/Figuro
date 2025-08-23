@@ -52,7 +52,7 @@ Backend `.env` keys:
 - `DATABASE_URL` (Postgres)
 - `JWT_SECRET`
 - `REDIS_URL` (optional)
-- `FRONTEND_URL`
+- `WEB_BASE_URL`
 - `VOICE_AGENT_BASE_URL` (e.g., `http://voice-agent:8000` in Docker or your deployed URL)
 
 Frontend `.env` (optional):

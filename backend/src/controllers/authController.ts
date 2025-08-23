@@ -180,7 +180,7 @@ export const googleCallback = async (req: Request, res: Response) => {
         const result = await OAuthService.handleGoogleCallback(code as string)
 
         // Redirect to frontend with token and provider
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+        const frontendUrl = process.env.WEB_BASE_URL || 'http://localhost:5173'
         const redirectUrl = `${frontendUrl}/login?token=${result.token}&provider=google&action=oauth`
 
         return res.redirect(redirectUrl)
@@ -199,7 +199,7 @@ export const facebookCallback = async (req: Request, res: Response) => {
         const result = await OAuthService.handleFacebookCallback(code as string)
 
         // Redirect to frontend with token and provider
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+        const frontendUrl = process.env.WEB_BASE_URL || 'http://localhost:5173'
         const redirectUrl = `${frontendUrl}/login?token=${result.token}&provider=facebook&action=oauth`
 
         return res.redirect(redirectUrl)

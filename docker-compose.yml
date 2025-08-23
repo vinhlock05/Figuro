@@ -39,7 +39,7 @@ services:
       - DATABASE_URL=postgresql://figuro_user:figuro_password@postgres:5432/figuro_db
       - PORT=3000
       - NODE_ENV=development
-      - FRONTEND_URL=http://localhost:3000
+      - WEB_BASE_URL=http://localhost:3000
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=local-dev-secret
     ports:
