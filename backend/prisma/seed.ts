@@ -1,9 +1,53 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
     console.log('🌱 Starting database seeding...');
+    // Check if admin user already exists
+    let admin = await prisma.user.findUnique({
+        where: { email: 'admin@figuro.com' }
+    })
+
+    if (!admin) {
+        const adminPassword = await bcrypt.hash('admin123', 10)
+        admin = await prisma.user.create({
+            data: {
+                name: 'Admin User',
+                email: 'admin@figuro.com',
+                passwordHash: adminPassword,
+                phone: '0123456789',
+                emailVerified: true,
+                role: 'admin'
+            }
+        })
+        console.log('✅ Admin user created:', admin.email)
+    } else {
+        console.log('ℹ️ Admin user already exists:', admin.email)
+    }
+
+    // Check if sample customer already exists
+    let customer = await prisma.user.findUnique({
+        where: { email: 'customer@example.com' }
+    })
+
+    if (!customer) {
+        const customerPassword = await bcrypt.hash('customer123', 10)
+        customer = await prisma.user.create({
+            data: {
+                name: 'Sample Customer',
+                email: 'customer@example.com',
+                passwordHash: customerPassword,
+                phone: '0987654321',
+                emailVerified: true,
+                role: 'customer'
+            }
+        })
+        console.log('✅ Sample customer created:', customer.email)
+    } else {
+        console.log('ℹ️ Sample customer already exists:', customer.email)
+    }
 
     // Create categories
     const categories = [

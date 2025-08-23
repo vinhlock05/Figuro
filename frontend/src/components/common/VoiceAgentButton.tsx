@@ -126,10 +126,10 @@ const VoiceAgentButton: React.FC = () => {
             icon: Mic
         }
     ];
-
-    if (!isSupported) {
-        return null;
-    }
+    console.log(isSupported);
+    // if (!isSupported) {
+    //     return null;
+    // }
 
     return (
         <>
