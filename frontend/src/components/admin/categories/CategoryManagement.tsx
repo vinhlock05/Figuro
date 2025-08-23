@@ -80,7 +80,7 @@ const CategoryManagement: React.FC = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">Categories</h1>
+                <h1 className="text-2xl font-bold text-black">Categories</h1>
                 <button onClick={() => { setIsModalOpen(true); setEditingCategory(null); setFormData({ name: '', description: '' }); }}
                     className="px-4 py-2 bg-indigo-600 text-white rounded">Add Category</button>
             </div>
@@ -93,7 +93,7 @@ const CategoryManagement: React.FC = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded shadow w-96">
-                        <h2 className="text-lg font-bold mb-4">{editingCategory ? 'Edit' : 'Add'} Category</h2>
+                        <h2 className="text-lg font-bold mb-4 text-black">{editingCategory ? 'Edit' : 'Add'} Category</h2>
                         <CategoryForm
                             formData={formData}
                             setFormData={setFormData}

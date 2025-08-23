@@ -14,7 +14,7 @@ const DataDebugger: React.FC<DataDebuggerProps> = ({ data }) => {
             <div className="fixed bottom-4 right-4 z-50">
                 <button
                     onClick={() => setIsVisible(true)}
-                    className="bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700"
+                    className="bg-muted-foreground text-background p-2 rounded-full shadow-lg hover:bg-foreground transition-colors"
                     title="Show Debug Info"
                 >
                     <Eye className="h-4 w-4" />
@@ -24,12 +24,12 @@ const DataDebugger: React.FC<DataDebuggerProps> = ({ data }) => {
     }
 
     return (
-        <div className="fixed bottom-4 right-4 z-50 bg-black text-white p-4 rounded-lg shadow-xl max-w-md max-h-96 overflow-auto text-xs">
+        <div className="fixed bottom-4 right-4 z-50 bg-card text-black p-4 rounded-lg shadow-xl max-w-md max-h-96 overflow-auto text-xs border border-border">
             <div className="flex justify-between items-center mb-2">
                 <h4 className="font-bold">Debug Data</h4>
                 <button
                     onClick={() => setIsVisible(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-black hover:text-black transition-colors"
                 >
                     <EyeOff className="h-4 w-4" />
                 </button>
@@ -38,7 +38,7 @@ const DataDebugger: React.FC<DataDebuggerProps> = ({ data }) => {
             <div className="space-y-2">
                 <div>
                     <strong>Total Stats:</strong>
-                    <pre className="bg-gray-900 p-2 rounded mt-1 text-green-400">
+                    <pre className="bg-muted p-2 rounded mt-1 text-green-600 dark:text-green-400">
                         {JSON.stringify({
                             totalUsers: data.totalUsers,
                             totalOrders: data.totalOrders,
@@ -50,21 +50,21 @@ const DataDebugger: React.FC<DataDebuggerProps> = ({ data }) => {
 
                 <div>
                     <strong>Recent Orders ({data.recentOrders?.length || 0}):</strong>
-                    <pre className="bg-gray-900 p-2 rounded mt-1 text-blue-400">
+                    <pre className="bg-muted p-2 rounded mt-1 text-blue-600 dark:text-blue-400">
                         {JSON.stringify(data.recentOrders || [], null, 2)}
                     </pre>
                 </div>
 
                 <div>
                     <strong>Top Products ({data.topProducts?.length || 0}):</strong>
-                    <pre className="bg-gray-900 p-2 rounded mt-1 text-yellow-400">
+                    <pre className="bg-muted p-2 rounded mt-1 text-yellow-600 dark:text-yellow-400">
                         {JSON.stringify(data.topProducts || [], null, 2)}
                     </pre>
                 </div>
 
                 <div>
                     <strong>Orders by Status ({data.ordersByStatus?.length || 0}):</strong>
-                    <pre className="bg-gray-900 p-2 rounded mt-1 text-purple-400">
+                    <pre className="bg-muted p-2 rounded mt-1 text-purple-600 dark:text-purple-400">
                         {JSON.stringify(data.ordersByStatus || [], null, 2)}
                     </pre>
                 </div>

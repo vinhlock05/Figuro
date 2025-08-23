@@ -52,14 +52,14 @@ const OrderSort: React.FC<OrderSortProps> = ({ sortConfig, onSortChange }) => {
 
     return (
         <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Sắp xếp theo:</span>
+            <span className="text-sm text-black">Sắp xếp theo:</span>
 
             {/* Sort Field Dropdown */}
             <div className="relative">
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black"
                 >
                     <ArrowUpDown className="h-4 w-4 mr-2 text-gray-400" />
                     {currentOption?.label}
@@ -70,12 +70,12 @@ const OrderSort: React.FC<OrderSortProps> = ({ sortConfig, onSortChange }) => {
                     <>
                         {/* Backdrop */}
                         <div
-                            className="fixed inset-0 z-10"
+                            className="fixed inset-0 z-10 text-black"
                             onClick={() => setIsOpen(false)}
                         />
 
                         {/* Dropdown */}
-                        <div className="absolute left-0 mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                        <div className="absolute left-0 mt-1 w-40 text-black bg-white border border-gray-200 rounded-md shadow-lg z-20">
                             <div className="py-1">
                                 {SORT_OPTIONS.map((option) => (
                                     <button
@@ -83,7 +83,7 @@ const OrderSort: React.FC<OrderSortProps> = ({ sortConfig, onSortChange }) => {
                                         onClick={() => handleSortFieldChange(option.value)}
                                         className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${sortConfig.field === option.value
                                             ? 'bg-indigo-50 text-indigo-700 font-medium'
-                                            : 'text-gray-700'
+                                            : 'text-black'
                                             }`}
                                     >
                                         {option.label}
@@ -99,7 +99,7 @@ const OrderSort: React.FC<OrderSortProps> = ({ sortConfig, onSortChange }) => {
             <button
                 type="button"
                 onClick={toggleDirection}
-                className="inline-flex items-center px-2 py-2 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="inline-flex items-center px-2 py-2 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black"
                 title={sortConfig.direction === 'asc' ? 'Sắp xếp tăng dần' : 'Sắp xếp giảm dần'}
             >
                 {getSortIcon()}

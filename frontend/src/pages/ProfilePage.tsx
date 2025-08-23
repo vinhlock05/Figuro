@@ -21,7 +21,7 @@ const ProfilePage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-lg mx-auto bg-white p-8 rounded shadow mt-8">
+        <div className="max-w-lg mx-auto bg-white p-8 rounded shadow mt-8 text-black">
             <h1 className="text-2xl font-bold mb-6">Profile</h1>
             <form onSubmit={handleSave} className="space-y-4">
                 <div>

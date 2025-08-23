@@ -10,7 +10,7 @@ interface UserListProps {
 }
 
 const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, onRoleUpdate }) => (
-    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+    <div className="bg-white shadow overflow-hidden sm:rounded-md text-black">
         {users.length === 0 ? (
             <div className="p-6 text-center text-gray-500">No users found</div>
         ) : (

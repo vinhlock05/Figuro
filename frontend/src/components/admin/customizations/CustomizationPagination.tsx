@@ -7,7 +7,7 @@ interface CustomizationPaginationProps {
 }
 
 const CustomizationPagination: React.FC<CustomizationPaginationProps> = ({ page, totalPages, setPage }) => (
-    <div className="flex justify-center items-center gap-2 mt-4">
+    <div className="flex justify-center items-center gap-2 mt-4 text-black">
         <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}

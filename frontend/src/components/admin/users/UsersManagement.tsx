@@ -104,7 +104,7 @@ export const UsersManagement: React.FC = () => {
                                     <p className="text-sm text-gray-600 mb-2">
                                         Update role for <strong>{editingUser.name}</strong>
                                     </p>
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 text-black">
                                         <label className="flex items-center">
                                             <input
                                                 type="radio"

@@ -9,7 +9,7 @@ interface CategoryListProps {
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({ categories, onEdit, onDelete }) => (
-    <table className="min-w-full bg-white border">
+    <table className="min-w-full bg-white border text-black">
         <thead>
             <tr>
                 <th className="border px-4 py-2">Name</th>

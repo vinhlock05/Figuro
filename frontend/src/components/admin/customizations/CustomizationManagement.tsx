@@ -111,13 +111,13 @@ const CustomizationManagement: React.FC = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">Customizations</h1>
+                <h1 className="text-2xl font-bold text-black">Customizations</h1>
                 <div className="flex items-center space-x-4">
                     {/* Product Filter */}
                     <select
                         value={selectedProductId || ''}
                         onChange={(e) => setSelectedProductId(e.target.value ? Number(e.target.value) : undefined)}
-                        className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+                        className="border border-gray-300 rounded-md px-3 py-1 text-sm text-black"
                     >
                         <option value="">All Products</option>
                         {products?.map(product => (

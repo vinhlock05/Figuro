@@ -32,8 +32,8 @@ export const AdminDashboard: React.FC = () => {
     if (!dashboardStats) {
         return (
             <div className="text-center py-12">
-                <h3 className="text-lg font-medium text-gray-900">No data available</h3>
-                <p className="text-gray-500">Dashboard statistics will appear here once data is available.</p>
+                <h3 className="text-lg font-medium text-black">No data available</h3>
+                <p className="text-black">Dashboard statistics will appear here once data is available.</p>
             </div>
         );
     }
@@ -83,8 +83,8 @@ export const AdminDashboard: React.FC = () => {
         <div className="space-y-6">
             {/* Page header */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-600">Overview of your store's performance</p>
+                <h1 className="text-2xl font-bold text-black">Dashboard</h1>
+                <p className="text-black">Overview of your store's performance</p>
             </div>
 
             {/* Stats grid */}

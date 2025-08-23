@@ -13,18 +13,18 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => (
         {stats.map((item) => (
             <div
                 key={item.name}
-                className="relative overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:px-6"
+                className="relative overflow-hidden rounded-lg bg-card px-4 py-5 shadow border border-border"
             >
                 <dt>
                     <div className="absolute rounded-md bg-indigo-500 p-3">
                         <item.icon className="h-6 w-6 text-white" />
                     </div>
-                    <p className="ml-16 truncate text-sm font-medium text-gray-500">
+                    <p className="ml-16 truncate text-sm font-medium text-black">
                         {item.name}
                     </p>
                 </dt>
                 <dd className="ml-16 flex items-baseline">
-                    <p className="text-2xl font-semibold text-gray-900">{item.value}</p>
+                    <p className="text-2xl font-semibold text-black">{item.value}</p>
                 </dd>
             </div>
         ))}

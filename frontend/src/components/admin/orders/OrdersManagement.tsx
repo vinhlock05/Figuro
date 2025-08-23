@@ -112,9 +112,13 @@ export const OrdersManagement: React.FC = () => {
                 <p className="text-gray-600">Manage orders and track status</p>
             </div>
             {/* Search and Sort */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-                <OrderSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                <OrderSort sortConfig={sortConfig} onSortChange={setSortConfig} />
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="flex-1">
+                    <OrderSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                </div>
+                <div className="flex-shrink-0">
+                    <OrderSort sortConfig={sortConfig} onSortChange={setSortConfig} />
+                </div>
             </div>
             {/* Orders table */}
             {isLoadingOrders ? (

@@ -9,7 +9,7 @@ interface CustomizationListProps {
 }
 
 const CustomizationList: React.FC<CustomizationListProps> = ({ customizations, onEdit, onDelete }) => (
-    <table className="min-w-full bg-white border">
+    <table className="min-w-full bg-white border text-black">
         <thead>
             <tr>
                 <th className="border px-4 py-2">Product ID</th>

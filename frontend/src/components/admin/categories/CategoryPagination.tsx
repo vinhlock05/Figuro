@@ -7,11 +7,11 @@ interface CategoryPaginationProps {
 }
 
 const CategoryPagination: React.FC<CategoryPaginationProps> = ({ page, totalPages, setPage }) => (
-    <div className="flex justify-center items-center gap-2 mt-4">
+    <div className="flex justify-center items-center gap-2 mt-4 text-black">
         <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded disabled:opacity-50 text-black"
         >
             Prev
         </button>

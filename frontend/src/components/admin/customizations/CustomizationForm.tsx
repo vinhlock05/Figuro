@@ -22,11 +22,11 @@ const formatPrice = (price: number) => {
 const CustomizationForm: React.FC<CustomizationFormProps> = ({ formData, setFormData, onSubmit, onCancel, editingCustomization, products }) => (
     <form onSubmit={onSubmit} className="space-y-4">
         <div>
-            <label className="block text-sm font-medium">Product</label>
+            <label className="block text-sm font-medium text-black">Product</label>
             <select
                 value={formData.productId}
                 onChange={e => setFormData({ ...formData, productId: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-border rounded px-3 py-2 bg-background text-black focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                 required
             >
                 <option value="" disabled>Select a product</option>
@@ -36,39 +36,39 @@ const CustomizationForm: React.FC<CustomizationFormProps> = ({ formData, setForm
             </select>
         </div>
         <div>
-            <label className="block text-sm font-medium">Type</label>
+            <label className="block text-sm font-medium text-black">Type</label>
             <input
                 type="text"
                 value={formData.optionType}
                 onChange={e => setFormData({ ...formData, optionType: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-border rounded px-3 py-2 bg-background text-black focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                 required
             />
         </div>
         <div>
-            <label className="block text-sm font-medium">Value</label>
+            <label className="block text-sm font-medium text-black">Value</label>
             <input
                 type="text"
                 value={formData.optionValue}
                 onChange={e => setFormData({ ...formData, optionValue: e.target.value })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-border rounded px-3 py-2 bg-background text-black focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                 required
             />
         </div>
         <div>
-            <label className="block text-sm font-medium">Price Delta (VNĐ)</label>
+            <label className="block text-sm font-medium text-black">Price Delta (VNĐ)</label>
             <input
                 type="number"
                 value={formData.priceDelta}
                 onChange={e => setFormData({ ...formData, priceDelta: Number(e.target.value) })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-border rounded px-3 py-2 bg-background text-black focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                 required
             />
-            <div className="text-xs text-gray-500 mt-1">{formatPrice(formData.priceDelta)}</div>
+            <div className="text-xs text-black mt-1">{formatPrice(formData.priceDelta)}</div>
         </div>
         <div className="flex justify-end space-x-3 pt-4">
-            <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">Cancel</button>
-            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700">{editingCustomization ? 'Update' : 'Create'}</button>
+            <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-medium text-black bg-background border border-border rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">Cancel</button>
+            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">{editingCustomization ? 'Update' : 'Create'}</button>
         </div>
     </form>
 );
