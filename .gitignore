@@ -79,7 +79,5 @@ dump.rdb       # Redis dump file
 resend.log     # Resend local log
 sendgrid.log   # SendGrid local log
 .vercel
-voice-agent/app/__pycache__/api.cpython-310.pyc
-voice-agent/app/__pycache__/api.cpython-310.pyc
-voice-agent/app/__pycache__/schemas.cpython-310.pyc
-voice-agent/app/__pycache__/service.cpython-310.pyc
+voice-agent/app/__pycache__/
+*.pyc
