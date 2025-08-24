@@ -8,6 +8,11 @@ import {
     Clock,
     CheckCircle,
     ArrowLeft,
+    CreditCard,
+    Wallet,
+    Banknote,
+    Truck,
+    X,
 } from 'lucide-react';
 import ToastMessage from '../../common/ToastMessage';
 
@@ -16,6 +21,9 @@ const OrderDetailPage: React.FC = () => {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ open: false, type: 'info' as 'success' | 'error' | 'info', message: '', title: '' });
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+    const [processingPayment, setProcessingPayment] = useState(false);
 
     useEffect(() => {
         if (orderId) {
@@ -40,17 +48,6 @@ const OrderDetailPage: React.FC = () => {
 
 
 
-    const handleCancelOrder = async () => {
-        if (!order) return;
-        try {
-            // TODO: Implement cancel order functionality
-            setToast({ open: true, type: 'success', message: 'Order cancelled successfully!', title: 'Order Update' });
-        } catch (error) {
-            setToast({ open: true, type: 'error', message: 'Error cancelling order.', title: 'Order Update' });
-            console.error('Error cancelling order:', error);
-        }
-    };
-
     const handleReorder = async () => {
         if (!order) return;
         try {
@@ -59,6 +56,96 @@ const OrderDetailPage: React.FC = () => {
         } catch (error) {
             setToast({ open: true, type: 'error', message: 'Error reordering.', title: 'Order Update' });
             console.error('Error reordering:', error);
+        }
+    };
+
+    const handlePayAgain = async () => {
+        if (!order) return;
+        setShowPaymentModal(true);
+    };
+
+    const handlePaymentMethodSelect = (method: string) => {
+        setSelectedPaymentMethod(method);
+    };
+
+    const processPayment = async () => {
+        if (!order || !selectedPaymentMethod) return;
+
+        try {
+            setProcessingPayment(true);
+            const paymentResult = await customerService.createPayment(order.id, selectedPaymentMethod);
+
+            if (paymentResult.success && paymentResult.paymentUrl) {
+                // Redirect to payment gateway
+                window.location.href = paymentResult.paymentUrl;
+            } else {
+                setToast({
+                    open: true,
+                    type: 'error',
+                    message: paymentResult.error || 'Payment creation failed',
+                    title: 'Payment Error'
+                });
+            }
+        } catch (error) {
+            console.error('Error processing payment:', error);
+            setToast({
+                open: true,
+                type: 'error',
+                message: 'Error processing payment. Please try again.',
+                title: 'Payment Error'
+            });
+        } finally {
+            setProcessingPayment(false);
+        }
+    };
+
+    const closePaymentModal = () => {
+        setShowPaymentModal(false);
+        setSelectedPaymentMethod('');
+    };
+
+    const getPaymentMethodIcon = (method: string) => {
+        switch (method) {
+            case 'momo':
+                return <Wallet className="h-6 w-6 text-pink-500" />;
+            case 'zalopay':
+                return <CreditCard className="h-6 w-6 text-blue-500" />;
+            case 'vnpay':
+                return <Banknote className="h-6 w-6 text-green-500" />;
+            case 'cod':
+                return <Truck className="h-6 w-6 text-orange-500" />;
+            default:
+                return <CreditCard className="h-6 w-6 text-gray-500" />;
+        }
+    };
+
+    const getPaymentMethodName = (method: string) => {
+        switch (method) {
+            case 'momo':
+                return 'MoMo Wallet';
+            case 'zalopay':
+                return 'ZaloPay';
+            case 'vnpay':
+                return 'VNPay';
+            case 'cod':
+                return 'Cash on Delivery';
+            default:
+                return method;
+        }
+    };
+
+    const getPaymentMethodDescription = (method: string) => {
+        switch (method) {
+            case 'momo':
+                return 'Pay with MoMo e-wallet';
+            case 'zalopay':
+                return 'Pay with ZaloPay';
+            case 'vnpay':
+                return 'Pay with VNPay';
+            case 'cod':
+                return 'Pay when you receive your order';
+            default:
+                return '';
         }
     };
 
@@ -336,12 +423,12 @@ const OrderDetailPage: React.FC = () => {
 
                                     {/* Actions */}
                                     <div className="border-t-2 border-neutral-200 dark:border-neutral-600 pt-4 space-y-3">
-                                        {order.status === 'pending' && (
+                                        {order.paymentStatus !== 'paid' && (
                                             <button
-                                                onClick={handleCancelOrder}
-                                                className="w-full h-12 border-2 border-danger text-danger hover:bg-danger hover:text-white rounded-xl transition-all duration-200 font-medium"
+                                                onClick={handlePayAgain}
+                                                className="w-full h-12 bg-brand text-white hover:bg-brand-dark rounded-xl border-2 border-brand transition-all duration-200 font-medium"
                                             >
-                                                Cancel Order
+                                                Pay Again
                                             </button>
                                         )}
                                         {order.status === 'delivered' && (
@@ -352,12 +439,6 @@ const OrderDetailPage: React.FC = () => {
                                                 Reorder
                                             </button>
                                         )}
-                                        <Link
-                                            to="/support"
-                                            className="block w-full h-12 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-200 hover:border-brand hover:text-brand rounded-xl transition-all duration-200 font-medium text-center leading-[48px]"
-                                        >
-                                            Get Help
-                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -381,6 +462,97 @@ const OrderDetailPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Payment Modal */}
+            {showPaymentModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-neutral-800 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b-2 border-neutral-100 dark:border-neutral-700">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+                                    Select Payment Method
+                                </h3>
+                                <button
+                                    onClick={closePaymentModal}
+                                    className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+                                >
+                                    <X className="h-6 w-6" />
+                                </button>
+                            </div>
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+                                Choose your preferred payment method for order #{order?.id}
+                            </p>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {/* Payment Methods */}
+                            <div className="space-y-3">
+                                {['momo', 'zalopay', 'vnpay', 'cod'].map((method) => (
+                                    <button
+                                        key={method}
+                                        onClick={() => handlePaymentMethodSelect(method)}
+                                        className={`w-full p-4 border-2 rounded-xl transition-all duration-200 text-left ${selectedPaymentMethod === method
+                                            ? 'border-brand bg-brand/5 dark:bg-brand/10'
+                                            : 'border-neutral-200 dark:border-neutral-600 hover:border-neutral-300 dark:hover:border-neutral-500'
+                                            }`}
+                                    >
+                                        <div className="flex items-center space-x-3">
+                                            {getPaymentMethodIcon(method)}
+                                            <div className="flex-1">
+                                                <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                                                    {getPaymentMethodName(method)}
+                                                </div>
+                                                <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                                                    {getPaymentMethodDescription(method)}
+                                                </div>
+                                            </div>
+                                            {selectedPaymentMethod === method && (
+                                                <CheckCircle className="h-5 w-5 text-brand" />
+                                            )}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Order Summary */}
+                            <div className="border-t-2 border-neutral-200 dark:border-neutral-600 pt-4">
+                                <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+                                    <span>Order Total:</span>
+                                    <span className="font-medium">{formatVND(parseFloat(order?.totalPrice || '0'))}</span>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="space-y-3 pt-4">
+                                <button
+                                    onClick={processPayment}
+                                    disabled={!selectedPaymentMethod || processingPayment}
+                                    className={`w-full h-12 rounded-xl font-medium transition-all duration-200 ${selectedPaymentMethod && !processingPayment
+                                        ? 'bg-brand text-white hover:bg-brand-dark'
+                                        : 'bg-neutral-200 dark:bg-neutral-600 text-neutral-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    {processingPayment ? (
+                                        <div className="flex items-center justify-center space-x-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                            <span>Processing...</span>
+                                        </div>
+                                    ) : (
+                                        `Pay ${formatVND(parseFloat(order?.totalPrice || '0'))}`
+                                    )}
+                                </button>
+
+                                <button
+                                    onClick={closePaymentModal}
+                                    className="w-full h-12 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-200 hover:border-neutral-400 dark:hover:border-neutral-500 rounded-xl transition-all duration-200 font-medium"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Toast Message */}
             <ToastMessage

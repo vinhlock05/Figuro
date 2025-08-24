@@ -167,15 +167,17 @@ class VoiceAgentService:
             products_response = requests.get(
                 f"{self.backend_api_url}/products")
             if products_response.status_code == 200:
+                products = products_response.json().get("data", {}).get("products", [])
                 self.product_cache = {
-                    p['id']: p for p in products_response.json()}
+                    p['id']: p for p in products}
 
             # Fetch categories from backend
             categories_response = requests.get(
-                f"{self.backend_api_url}/categories")
+                f"{self.backend_api_url}/products/categories/all")
             if categories_response.status_code == 200:
+                categories = categories_response.json().get("data", {}).get("categories", [])
                 self.category_cache = {
-                    c['id']: c for c in categories_response.json()}
+                    c['id']: c for c in categories}
 
             self.last_cache_update = current_time
             logger.info(

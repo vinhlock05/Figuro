@@ -9,6 +9,7 @@ import notificationRoutes from './notification'
 import orderTrackingRoutes from './orderTracking'
 import wishlistRoutes from './wishlist'
 import voiceAgentRoutes from './voiceAgent'
+import chatbotRoutes from './chatbot'
 
 export const registerRoutes = (app: Express) => {
     app.use('/api/auth', authRoutes)
@@ -21,4 +22,5 @@ export const registerRoutes = (app: Express) => {
     app.use('/api/order-tracking', orderTrackingRoutes)
     app.use('/api/wishlist', wishlistRoutes)
     app.use('/api/voice-agent', voiceAgentRoutes)
+    app.use('/api/chatbot', chatbotRoutes)
 } 
